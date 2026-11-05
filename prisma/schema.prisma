@@ -1,0 +1,153 @@
+// This is your Prisma schema file for JejakLapak v1.0
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["public", "auth"]
+}
+
+enum UserRole {
+  CUSTOMER
+  MERCHANT
+  ADMIN
+
+  @@schema("public")
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+
+  @@schema("public")
+}
+
+enum SessionStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+
+  @@schema("public")
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String
+  email        String    @unique
+  phone        String?
+  passwordHash String?   @map("password_hash")
+  role         UserRole  @default(MERCHANT)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  merchants    Merchant[]
+
+  @@map("users")
+  @@schema("public")
+}
+
+model Merchant {
+  id                 String             @id @default(uuid()) @db.Uuid
+  ownerId            String             @map("owner_id") @db.Uuid
+  owner              User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name               String
+  slug               String             @unique
+  description        String?
+  category           String
+  image              String?
+  phone              String
+  address            String
+  district           String
+  city               String             @default("Bandung")
+  operatingArea      String             @map("operating_area")
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  schedules          MerchantSchedule[]
+  sessions           SellingSession[]
+  locations          MerchantLocation[]
+  menuItems          MenuItem[]
+
+  @@index([ownerId])
+  @@index([category])
+  @@index([district])
+  @@index([verificationStatus])
+  @@map("merchants")
+  @@schema("public")
+}
+
+model MerchantSchedule {
+  id         String   @id @default(uuid()) @db.Uuid
+  merchantId String   @map("merchant_id") @db.Uuid
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  dayOfWeek  Int      @map("day_of_week") // 0 = Minggu, 1 = Senin, ... 6 = Sabtu
+  isOpen     Boolean  @default(true) @map("is_open")
+  startTime  String   @map("start_time") // "09:00"
+  endTime    String   @map("end_time")   // "17:00"
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@unique([merchantId, dayOfWeek])
+  @@index([merchantId])
+  @@map("merchant_schedules")
+  @@schema("public")
+}
+
+model SellingSession {
+  id         String        @id @default(uuid()) @db.Uuid
+  merchantId String        @map("merchant_id") @db.Uuid
+  merchant   Merchant      @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  status     SessionStatus @default(ACTIVE)
+  startedAt  DateTime      @default(now()) @map("started_at")
+  pausedAt   DateTime?     @map("paused_at")
+  endedAt    DateTime?     @map("ended_at")
+  createdAt  DateTime      @default(now()) @map("created_at")
+  updatedAt  DateTime      @updatedAt @map("updated_at")
+
+  locations  MerchantLocation[]
+
+  @@index([merchantId, status])
+  @@map("selling_sessions")
+  @@schema("public")
+}
+
+model MerchantLocation {
+  id         String          @id @default(uuid()) @db.Uuid
+  merchantId String          @map("merchant_id") @db.Uuid
+  merchant   Merchant        @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  sessionId  String?         @map("session_id") @db.Uuid
+  session    SellingSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  latitude   Float
+  longitude  Float
+  accuracy   Float?
+  capturedAt DateTime        @default(now()) @map("captured_at")
+
+  @@index([merchantId, capturedAt])
+  @@index([sessionId])
+  @@map("merchant_locations")
+  @@schema("public")
+}
+
+model MenuItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  merchantId  String   @map("merchant_id") @db.Uuid
+  merchant    Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  price       Int
+  image       String?
+  isAvailable Boolean  @default(true) @map("is_available")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([merchantId])
+  @@map("menu_items")
+  @@schema("public")
+}
