@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
-    "postinstall": "node -e \"const fs=require('fs'); if(fs.existsSync('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs')){ fs.copyFileSync('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs','public/maplibre-gl-worker.mjs'); fs.copyFileSync('node_modules/maplibre-gl/dist/maplibre-gl-worker-dev.mjs','public/maplibre-gl-worker-dev.mjs'); }\""
+    "postinstall": "prisma generate && node -e \"const fs=require('fs'); if(fs.existsSync('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs')){ fs.copyFileSync('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs','public/maplibre-gl-worker.mjs'); fs.copyFileSync('node_modules/maplibre-gl/dist/maplibre-gl-worker-dev.mjs','public/maplibre-gl-worker-dev.mjs'); }\""
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

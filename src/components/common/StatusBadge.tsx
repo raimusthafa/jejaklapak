@@ -1,34 +1,12 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useState, useEffect } from "react";
 import { PauseCircle, StopCircle, Clock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateFreshness } from "@/services/mock/merchantService";
-import { MOCK_BASE_TIMESTAMP } from "@/config/constants";
 
 export type SellingStatus = "ACTIVE" | "PAUSED" | "ENDED";
 export type FreshnessStatus = "LIVE" | "RECENT" | "STALE";
-
-const timeStore = {
-  subscribe(callback: () => void) {
-    const id = setInterval(callback, 30000);
-    return () => clearInterval(id);
-  },
-  getSnapshot() {
-    return Date.now();
-  },
-  getServerSnapshot() {
-    return MOCK_BASE_TIMESTAMP;
-  },
-};
-
-function useLiveTimestamp() {
-  return useSyncExternalStore(
-    timeStore.subscribe,
-    timeStore.getSnapshot,
-    timeStore.getServerSnapshot
-  );
-}
 
 interface StatusBadgeProps {
   status: SellingStatus;
@@ -94,11 +72,22 @@ export function FreshnessBadge({
   capturedAt,
   className,
 }: FreshnessBadgeProps) {
-  const currentTimestamp = useLiveTimestamp();
+  const [currentTimestamp, setCurrentTimestamp] = useState<number | null>(null);
 
-  const activeFreshness: FreshnessStatus = capturedAt
-    ? calculateFreshness(capturedAt, currentTimestamp)
-    : initialFreshness;
+  useEffect(() => {
+    setCurrentTimestamp(Date.now());
+    const id = setInterval(() => {
+      setCurrentTimestamp(Date.now());
+    }, 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  // During SSR and initial client hydration, strictly use initialFreshness
+  // Once mounted on client, calculate live freshness based on current time
+  const activeFreshness: FreshnessStatus =
+    currentTimestamp !== null && capturedAt
+      ? calculateFreshness(capturedAt, currentTimestamp)
+      : initialFreshness;
 
   if (activeFreshness === "LIVE") {
     return (
