@@ -10,6 +10,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate && node -e \"const fs=require('fs'); if(fs.existsSync('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs')){ fs.copyFileSync('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs','public/maplibre-gl-worker.mjs'); fs.copyFileSync('node_modules/maplibre-gl/dist/maplibre-gl-worker-dev.mjs','public/maplibre-gl-worker-dev.mjs'); }\""
   },
+
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
