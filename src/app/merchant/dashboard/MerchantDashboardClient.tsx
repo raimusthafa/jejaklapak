@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
+import { toast } from "@/components/ui/sonner";
 
 export default function MerchantDashboardClient({
   user,
@@ -44,7 +45,6 @@ export default function MerchantDashboardClient({
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualLat, setManualLat] = useState(defaultMerchant.location.latitude.toString());
   const [manualLng, setManualLng] = useState(defaultMerchant.location.longitude.toString());
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [isRefreshingGps, setIsRefreshingGps] = useState(false);
 
@@ -117,9 +117,14 @@ export default function MerchantDashboardClient({
   const displayLat = liveCoords ? liveCoords.latitude : merchant.location.latitude;
   const displayLng = liveCoords ? liveCoords.longitude : merchant.location.longitude;
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+  const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
+    if (type === "error") {
+      toast.error(msg);
+    } else if (type === "info") {
+      toast.info(msg);
+    } else {
+      toast.success(msg);
+    }
   };
 
   const handleToggleStatus = async () => {
@@ -236,14 +241,6 @@ export default function MerchantDashboardClient({
 
   return (
     <div className="min-h-screen bg-[#f4f8fb] font-sans text-slate-800 antialiased flex">
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div className="fixed top-20 right-4 z-50 flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-3 text-xs shadow-xl border border-slate-700 animate-in fade-in slide-in-from-top-2">
-          <CheckCircle2 className="h-4 w-4 text-[#60C1E5] shrink-0" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* Merchant Sidebar */}
       <MerchantSidebar
         isOpen={isSidebarOpen}

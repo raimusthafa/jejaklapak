@@ -80,6 +80,17 @@ export function Navbar() {
     }
   };
 
+  // Jangan render navbar pada area dashboard pedagang karena sepenuhnya menggunakan sidebar
+  const isMerchantDashboardPage =
+    pathname.startsWith("/merchant/dashboard") ||
+    pathname.startsWith("/merchant/menu") ||
+    pathname.startsWith("/merchant/profile") ||
+    pathname.startsWith("/merchant/schedule");
+
+  if (isMerchantDashboardPage) {
+    return null;
+  }
+
   // Nav links dinamis berdasarkan autentikasi dan role
   const navLinks = [
     { href: "/explore", label: "Peta Eksplorasi", icon: Compass },

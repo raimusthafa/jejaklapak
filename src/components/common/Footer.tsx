@@ -7,8 +7,14 @@ import { MapPin, Compass, Store, ShieldCheck } from "lucide-react";
 export function Footer() {
   const pathname = usePathname();
 
-  // Jangan render footer pada halaman /explore agar peta tetap full-height dan tidak ikut ter-scroll
-  if (pathname === "/explore") {
+  const isMerchantDashboardPage =
+    pathname.startsWith("/merchant/dashboard") ||
+    pathname.startsWith("/merchant/menu") ||
+    pathname.startsWith("/merchant/profile") ||
+    pathname.startsWith("/merchant/schedule");
+
+  // Jangan render footer pada halaman /explore dan area dashboard pedagang
+  if (pathname === "/explore" || isMerchantDashboardPage) {
     return null;
   }
 

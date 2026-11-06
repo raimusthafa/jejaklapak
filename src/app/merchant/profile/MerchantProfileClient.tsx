@@ -7,9 +7,10 @@ import { Merchant } from "@/types/merchant";
 import { updateMerchantProfileAction } from "@/actions/merchant";
 import { MerchantCategory } from "@/types/merchant";
 import { CATEGORIES, BANDUNG_DISTRICTS } from "@/config/constants";
-import { ArrowLeft, Save, CheckCircle2, AlertCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ArrowLeft, Save, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
+import { toast } from "@/components/ui/sonner";
 
 export default function MerchantProfileClient({
   user,
@@ -32,8 +33,6 @@ export default function MerchantProfileClient({
 
   const [isPending, setIsPending] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchMerchantData() {
@@ -70,7 +69,6 @@ export default function MerchantProfileClient({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsPending(true);
-    setMessage(null);
 
     const formData = new FormData();
     formData.append("name", name);
@@ -85,12 +83,9 @@ export default function MerchantProfileClient({
     setIsPending(false);
 
     if (result.ok) {
-      setIsSuccess(true);
-      setMessage(result.message || "Profil berhasil diperbarui!");
-      setTimeout(() => setMessage(null), 3500);
+      toast.success(result.message || "Profil berhasil diperbarui!");
     } else {
-      setIsSuccess(false);
-      setMessage(result.message || "Gagal memperbarui profil.");
+      toast.error(result.message || "Gagal memperbarui profil.");
     }
   };
 
@@ -140,19 +135,6 @@ export default function MerchantProfileClient({
               Perbarui identitas pedagang, kategori, dan area rute berkeliling di database Supabase/Prisma.
             </p>
           </div>
-
-          {message && (
-            <div
-              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border ${
-                isSuccess
-                  ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-                  : "text-rose-700 bg-rose-50 border-rose-200"
-              }`}
-            >
-              {isSuccess ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-              {message}
-            </div>
-          )}
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-5 text-xs">

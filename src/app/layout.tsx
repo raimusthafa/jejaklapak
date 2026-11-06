@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { Navbar } from "@/components/common/Navbar";
 import { Footer } from "@/components/common/Footer";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
@@ -38,6 +39,7 @@ export default function RootLayout({
         </Suspense>
         <main className="flex-1 flex flex-col">{children}</main>
         <Footer />
+        <Toaster />
       </body>
     </html>
   );

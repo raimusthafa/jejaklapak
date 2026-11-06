@@ -322,10 +322,30 @@ Dokumen ini mencatat riwayat kemajuan implementasi, status tahapan, dan rencana 
     - ESLint (`npm run lint`): **0 Error, 0 Warning**.
     - Next.js 16 Production Build (`npm run build`): **100% Berhasil**, 26/26 rute berhasil dikompilasi dengan Turbopack dan Partial Prerendering.
 
+### 2026-11-06 (Sesi 10 — Perbaikan Login, Halaman Pedagang Bebas Navbar, & Migrasi Toast Sonner)
+50. **Penyempurnaan Halaman Login (`/merchant/login`):**
+    - Menghapus email dan kata sandi bawaan (default input kosong).
+    - Menghapus tombol toggle pilihan peran pedagang vs admin. Sistem secara otomatis mendeteksi role pengguna dari database dan mengarahkan ke dashboard yang tepat (`/merchant/dashboard` atau `/admin/dashboard`).
+    - Merombak total skema warna ke palet Stitch Minimal Blue: background `#f4f8fb`, kontainer kartu putih dengan aksen biru `#0284c7`, tombol utama `#60C1E5` (hover `#4eb3d8`), dan input focus border `#0284c7`.
+
+51. **Halaman Pedagang Bebas Navbar & Logout Terpusat di Sidebar:**
+    - Navbar global (`Navbar.tsx`) dan footer publik (`Footer.tsx`) dinonaktifkan secara otomatis saat berada di seluruh rute pedagang (`/merchant/dashboard`, `/merchant/menu`, `/merchant/profile`, `/merchant/schedule`).
+    - Area pedagang kini murni menggunakan `MerchantSidebar` untuk navigasi antar-modul dan pengoperasian logout terpusat.
+
+52. **Migrasi Pesan Notifikasi ke Sonner Toast:**
+    - Menginstal dan mengonfigurasi pustaka `@/components/ui/sonner` dengan styling Minimal Blue.
+    - Menambahkan `<Toaster />` di root layout (`src/app/layout.tsx`).
+    - Mengganti seluruh banner inline atau alert ad-hoc pada form login, register, dashboard lapak, kelola menu, profil usaha, dan jadwal operasional dengan `toast.success`, `toast.error`, dan `toast.info`.
+
+53. **Verifikasi Kualitas Kode & Produksi:**
+    - TypeScript (`npx tsc --noEmit`): **0 Error**.
+    - ESLint (`npm run lint`): **0 Error, 0 Warning**.
+    - Next.js 16 Production Build (`npm run build`): **100% Berhasil**, 26/26 rute berhasil dikompilasi dengan Turbopack dan Partial Prerendering.
+
 ---
 
 ## 🎯 Fokus Saat Ini (Current Task)
-- **Merchant Collapsible Sidebar Navigation**: ✅ **Selesai dan terverifikasi penuh**.
+- **Login Minimal Blue, Navbarless Merchant Area, & Sonner Toast**: ✅ **Selesai dan terverifikasi penuh**.
 
 ## ⏭️ Langkah Berikutnya (Next Task)
 - **Pengujian & Fitur Lanjutan**:

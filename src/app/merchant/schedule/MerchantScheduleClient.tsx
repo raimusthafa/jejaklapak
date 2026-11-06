@@ -5,9 +5,10 @@ import Link from "next/link";
 import { MOCK_MERCHANTS } from "@/data/mock/merchants";
 import { DaySchedule, Merchant } from "@/types/merchant";
 import { updateMerchantSchedulesAction } from "@/actions/merchant";
-import { ArrowLeft, Save, CheckCircle2, AlertCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ArrowLeft, Save, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
+import { toast } from "@/components/ui/sonner";
 
 export default function MerchantScheduleClient({
   user,
@@ -23,8 +24,6 @@ export default function MerchantScheduleClient({
   );
   const [isPending, setIsPending] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchSchedules() {
@@ -72,7 +71,6 @@ export default function MerchantScheduleClient({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsPending(true);
-    setMessage(null);
 
     const payload = schedule.map((s) => ({
       dayOfWeek: s.dayOfWeek,
@@ -85,12 +83,9 @@ export default function MerchantScheduleClient({
     setIsPending(false);
 
     if (result.ok) {
-      setIsSuccess(true);
-      setMessage(result.message || "Jadwal mingguan berhasil disimpan!");
-      setTimeout(() => setMessage(null), 3500);
+      toast.success(result.message || "Jadwal mingguan berhasil disimpan!");
     } else {
-      setIsSuccess(false);
-      setMessage(result.message || "Gagal menyimpan jadwal.");
+      toast.error(result.message || "Gagal menyimpan jadwal.");
     }
   };
 
@@ -141,19 +136,6 @@ export default function MerchantScheduleClient({
               Atur hari dan jam rencana berjualan rutin agar pelanggan dapat mengetahui ritme tokomu.
             </p>
           </div>
-
-          {message && (
-            <div
-              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border ${
-                isSuccess
-                  ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-                  : "text-rose-700 bg-rose-50 border-rose-200"
-              }`}
-            >
-              {isSuccess ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-              {message}
-            </div>
-          )}
         </div>
 
         <form onSubmit={handleSave} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-6 text-xs">

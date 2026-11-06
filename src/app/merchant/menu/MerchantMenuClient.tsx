@@ -15,8 +15,6 @@ import {
   ArrowLeft,
   Pencil,
   Trash2,
-  CheckCircle2,
-  AlertCircle,
   X,
   ToggleLeft,
   ToggleRight,
@@ -24,6 +22,7 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
+import { toast } from "@/components/ui/sonner";
 
 export interface MenuItemData {
   id: string;
@@ -60,12 +59,12 @@ export default function MerchantMenuClient({
   const [formDesc, setFormDesc] = useState("");
   const [formAvailable, setFormAvailable] = useState(true);
 
-  // Toast feedback
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-
   const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3500);
+    if (type === "success") {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
   };
 
   const handleOpenCreate = () => {
@@ -190,24 +189,6 @@ export default function MerchantMenuClient({
 
   return (
     <div className="min-h-screen bg-[#f4f8fb] text-slate-800 flex">
-      {/* Toast Feedback */}
-      {toast && (
-        <div
-          className={`fixed top-20 right-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-xs shadow-xl border animate-in fade-in ${
-            toast.type === "success"
-              ? "bg-slate-900 text-white border-slate-700"
-              : "bg-rose-900 text-white border-rose-700"
-          }`}
-        >
-          {toast.type === "success" ? (
-            <CheckCircle2 className="h-4 w-4 text-[#60C1E5] shrink-0" />
-          ) : (
-            <AlertCircle className="h-4 w-4 text-rose-400 shrink-0" />
-          )}
-          <span>{toast.message}</span>
-        </div>
-      )}
-
       {/* Merchant Sidebar */}
       <MerchantSidebar
         isOpen={isSidebarOpen}
