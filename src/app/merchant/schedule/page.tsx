@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { requireMerchant } from "@/server/auth";
 import { getMerchantSchedules } from "@/server/merchants";
 import MerchantScheduleClient from "./MerchantScheduleClient";
@@ -6,6 +7,7 @@ import MerchantScheduleClient from "./MerchantScheduleClient";
 export const instant = false;
 
 async function MerchantScheduleLoader() {
+  await connection();
   const merchantUser = await requireMerchant();
   const schedules = await getMerchantSchedules(
     merchantUser.merchantId || "00000000-0000-4000-8000-000000000100"

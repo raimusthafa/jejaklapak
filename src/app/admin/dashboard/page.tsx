@@ -1,10 +1,12 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { requireAdmin } from "@/server/auth";
 import AdminDashboardClient from "./AdminDashboardClient";
 
 export const instant = false;
 
 async function AdminDashboardLoader() {
+  await connection();
   const adminUser = await requireAdmin();
   return <AdminDashboardClient adminUser={adminUser} />;
 }

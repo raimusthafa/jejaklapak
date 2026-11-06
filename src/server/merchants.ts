@@ -131,7 +131,7 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
           city: m.city,
           capturedAt: latestLocation
             ? latestLocation.capturedAt.toISOString()
-            : (mockMatch?.location.capturedAt ?? new Date().toISOString()),
+            : (mockMatch?.location.capturedAt ?? "2026-01-01T00:00:00.000Z"),
         },
         schedule:
           m.schedules.length > 0
@@ -264,7 +264,7 @@ export async function getMerchantForUser(user: {
             city: dbMerchant.city,
             capturedAt: latestLocation
               ? latestLocation.capturedAt.toISOString()
-              : (mockMatch?.location.capturedAt ?? new Date().toISOString()),
+              : (mockMatch?.location.capturedAt ?? "2026-01-01T00:00:00.000Z"),
           },
           schedule:
             dbMerchant.schedules.length > 0
@@ -546,7 +546,17 @@ export async function getMerchantMenuItems(merchantId: string) {
         where: { merchantId: targetId },
         orderBy: { createdAt: "asc" },
       });
-      return items;
+      if (items.length > 0) {
+        return items.map((it) => ({
+          id: it.id,
+          merchantId: it.merchantId,
+          name: it.name,
+          description: it.description,
+          price: it.price,
+          image: it.image,
+          isAvailable: it.isAvailable,
+        }));
+      }
     }
   } catch (err) {
     console.warn("DB get menu items failed, fallback to mock:", err);
@@ -563,9 +573,7 @@ export async function getMerchantMenuItems(merchantId: string) {
     description: item.description || "",
     price: item.price,
     image: null,
-    isAvailable: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    isAvailable: item.isAvailable ?? true,
   }));
 }
 

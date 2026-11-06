@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { requireMerchant } from "@/server/auth";
 import { getMerchantForUser } from "@/server/merchants";
 import MerchantDashboardClient from "./MerchantDashboardClient";
@@ -6,6 +7,7 @@ import MerchantDashboardClient from "./MerchantDashboardClient";
 export const instant = false;
 
 async function MerchantDashboardLoader() {
+  await connection();
   const merchantUser = await requireMerchant();
   const initialMerchant = await getMerchantForUser(merchantUser);
   return <MerchantDashboardClient user={merchantUser} initialMerchant={initialMerchant} />;

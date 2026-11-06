@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { requireMerchant } from "@/server/auth";
 import { getMerchantMenuItems } from "@/server/merchants";
 import MerchantMenuClient from "./MerchantMenuClient";
@@ -6,6 +7,7 @@ import MerchantMenuClient from "./MerchantMenuClient";
 export const instant = false;
 
 async function MerchantMenuLoader() {
+  await connection();
   const user = await requireMerchant();
   const initialItems = await getMerchantMenuItems(
     user.merchantId || "00000000-0000-4000-8000-000000000100"
