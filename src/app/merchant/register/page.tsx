@@ -1,9 +1,22 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Store, User, Mail, Phone, Lock, CheckCircle2, MapPin, Navigation, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Store,
+  User,
+  Mail,
+  Phone,
+  Lock,
+  CheckCircle2,
+  MapPin,
+  Navigation,
+  AlertCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { CATEGORIES, BANDUNG_DISTRICTS } from "@/config/constants";
 import { registerMerchantAction, type ActionState } from "@/actions/auth";
 import { toast } from "@/components/ui/sonner";
@@ -14,6 +27,7 @@ const initialState: ActionState = {
 
 export default function MerchantRegisterPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const [state, formAction, isPending] = useActionState(registerMerchantAction, initialState);
 
   useEffect(() => {
@@ -45,11 +59,12 @@ export default function MerchantRegisterPage() {
           </p>
         </div>
 
+        {/* Notifikasi error dari server */}
         {state.message && !state.ok && (
-          <div className="flex items-start gap-3 rounded-xl bg-rose-50 border border-rose-200/90 p-3.5 text-xs text-rose-800">
+          <div className="flex items-start gap-3 rounded-xl bg-rose-50 border border-rose-200/90 p-3.5 text-xs text-rose-800 animate-in fade-in slide-in-from-top-1">
             <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
             <div className="space-y-0.5">
-              <p className="font-bold text-rose-900">Pendaftaran Gagal</p>
+              <p className="font-bold text-rose-900">Pendaftaran Belum Lengkap</p>
               <p className="text-rose-700 leading-relaxed">{state.message}</p>
             </div>
           </div>
@@ -77,10 +92,16 @@ export default function MerchantRegisterPage() {
                     name="name"
                     required
                     placeholder="Contoh: Mang Asep"
-                    className="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
+                      state.errors?.name
+                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                    }`}
                   />
                 </div>
-                {state.errors?.name && <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.name[0]}</p>}
+                {state.errors?.name && (
+                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.name[0]}</p>
+                )}
               </div>
 
               <div>
@@ -92,10 +113,16 @@ export default function MerchantRegisterPage() {
                     name="merchantName"
                     required
                     placeholder="Contoh: Cuanki Serayu Keliling"
-                    className="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
+                      state.errors?.merchantName
+                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                    }`}
                   />
                 </div>
-                {state.errors?.merchantName && <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.merchantName[0]}</p>}
+                {state.errors?.merchantName && (
+                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.merchantName[0]}</p>
+                )}
               </div>
             </div>
 
@@ -109,10 +136,16 @@ export default function MerchantRegisterPage() {
                     name="email"
                     required
                     placeholder="nama@email.com"
-                    className="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
+                      state.errors?.email
+                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                    }`}
                   />
                 </div>
-                {state.errors?.email && <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.email[0]}</p>}
+                {state.errors?.email && (
+                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.email[0]}</p>
+                )}
               </div>
 
               <div>
@@ -124,10 +157,16 @@ export default function MerchantRegisterPage() {
                     name="phone"
                     required
                     placeholder="081234567890"
-                    className="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
+                      state.errors?.phone
+                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                    }`}
                   />
                 </div>
-                {state.errors?.phone && <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.phone[0]}</p>}
+                {state.errors?.phone && (
+                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.phone[0]}</p>
+                )}
               </div>
             </div>
 
@@ -138,14 +177,20 @@ export default function MerchantRegisterPage() {
                   name="category"
                   required
                   defaultValue=""
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7] bg-white"
+                  className={`w-full rounded-xl border px-3 py-2.5 text-slate-900 bg-white focus:outline-none focus:ring-1 transition ${
+                    state.errors?.category
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                  }`}
                 >
-                  <option value="" disabled>Pilih Kategori</option>
+                  <option value="" disabled>Pilih Kategori Kuliner</option>
                   {CATEGORIES.filter((c) => c !== "Semua Kategori").map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-                {state.errors?.category && <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.category[0]}</p>}
+                {state.errors?.category && (
+                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.category[0]}</p>
+                )}
               </div>
 
               <div>
@@ -154,14 +199,20 @@ export default function MerchantRegisterPage() {
                   name="district"
                   required
                   defaultValue=""
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7] bg-white"
+                  className={`w-full rounded-xl border px-3 py-2.5 text-slate-900 bg-white focus:outline-none focus:ring-1 transition ${
+                    state.errors?.district
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                  }`}
                 >
                   <option value="" disabled>Pilih Wilayah</option>
                   {BANDUNG_DISTRICTS.filter((d) => d !== "Semua Wilayah").map((dist) => (
                     <option key={dist} value={dist}>{dist}</option>
                   ))}
                 </select>
-                {state.errors?.district && <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.district[0]}</p>}
+                {state.errors?.district && (
+                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.district[0]}</p>
+                )}
               </div>
             </div>
 
@@ -175,9 +226,16 @@ export default function MerchantRegisterPage() {
                     name="address"
                     required
                     placeholder="Depan Kampus ITB Jl. Ganesha"
-                    className="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
+                      state.errors?.address
+                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                    }`}
                   />
                 </div>
+                {state.errors?.address && (
+                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.address[0]}</p>
+                )}
               </div>
 
               <div>
@@ -189,25 +247,54 @@ export default function MerchantRegisterPage() {
                     name="operatingArea"
                     required
                     placeholder="Riau, Gandapura, Cisangkuy"
-                    className="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
+                      state.errors?.operatingArea
+                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                    }`}
                   />
                 </div>
+                {state.errors?.operatingArea && (
+                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.operatingArea[0]}</p>
+                )}
               </div>
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Kata Sandi Akun</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-semibold text-slate-700">Kata Sandi Akun</label>
+                <span className="text-[11px] text-slate-400">Minimal 6 karakter bebas</span>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   name="password"
                   required
-                  placeholder="Minimal 6 karakter"
-                  className="w-full rounded-xl border border-slate-200 pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-[#0284c7] focus:outline-none focus:ring-1 focus:ring-[#0284c7]"
+                  placeholder="••••••••"
+                  className={`w-full rounded-xl border pl-9 pr-10 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
+                    state.errors?.password
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                      : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                  }`}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Sembunyikan sandi" : "Lihat sandi"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
-              {state.errors?.password && <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.password[0]}</p>}
+              {state.errors?.password ? (
+                <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.password[0]}</p>
+              ) : (
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Bisa menggunakan huruf, angka, atau simbol apa saja (tanpa syarat huruf besar/simbol khusus).
+                </p>
+              )}
             </div>
 
             <div className="flex items-start gap-2 pt-2">

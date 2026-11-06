@@ -20,10 +20,12 @@ export async function loginAction(
   const parsed = loginSchema.safeParse(rawData);
 
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const firstErrorMessage = Object.values(fieldErrors).flat()[0];
     return {
       ok: false,
-      errors: parsed.error.flatten().fieldErrors,
-      message: "Periksa kembali format email dan kata sandi Anda.",
+      errors: fieldErrors,
+      message: firstErrorMessage || "Periksa kembali format email dan kata sandi Anda.",
     };
   }
 
@@ -148,10 +150,12 @@ export async function registerMerchantAction(
   const parsed = registerMerchantSchema.safeParse(rawData);
 
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const firstErrorMessage = Object.values(fieldErrors).flat()[0];
     return {
       ok: false,
-      errors: parsed.error.flatten().fieldErrors,
-      message: "Data pendaftaran pedagang belum lengkap atau tidak valid.",
+      errors: fieldErrors,
+      message: firstErrorMessage || "Data pendaftaran pedagang belum lengkap atau tidak valid.",
     };
   }
 
