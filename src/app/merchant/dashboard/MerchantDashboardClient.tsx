@@ -22,8 +22,11 @@ import {
   TrendingUp,
   Power,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { AuthUser } from "@/server/auth";
+import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
 
 export default function MerchantDashboardClient({
   user,
@@ -36,6 +39,7 @@ export default function MerchantDashboardClient({
   const [merchant, setMerchant] = useState<Merchant>(defaultMerchant);
   const [status, setStatus] = useState<SellingStatus>(defaultMerchant.sellingStatus);
   const [lastCapturedAt, setLastCapturedAt] = useState(defaultMerchant.location.capturedAt);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showEndModal, setShowEndModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualLat, setManualLat] = useState(defaultMerchant.location.latitude.toString());
@@ -231,7 +235,7 @@ export default function MerchantDashboardClient({
   const codeTracker = `BDG-${merchant.id.substring(merchant.id.length - 4).toUpperCase()}`;
 
   return (
-    <div className="min-h-screen bg-[#f4f8fb] font-sans text-slate-800 antialiased pb-20">
+    <div className="min-h-screen bg-[#f4f8fb] font-sans text-slate-800 antialiased flex">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-20 right-4 z-50 flex items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-3 text-xs shadow-xl border border-slate-700 animate-in fade-in slide-in-from-top-2">
@@ -240,12 +244,43 @@ export default function MerchantDashboardClient({
         </div>
       )}
 
-      {/* 1. Top Header Pedagang (Stitch Design) */}
-      <header className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 sm:px-8 py-3.5 shadow-xs">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Identity & Status Indicator */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex items-center justify-center">
+      {/* Merchant Sidebar */}
+      <MerchantSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        user={user}
+        merchantName={merchant.name}
+        merchantSlug={merchant.slug}
+        iconEmoji={merchant.iconEmoji}
+        sellingStatus={status}
+        trackerCode={codeTracker}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 pb-20">
+        {/* 1. Top Header Pedagang (Stitch Design) */}
+        <header className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-30 px-4 sm:px-8 py-3.5 shadow-xs">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Identity & Status Indicator */}
+            <div className="flex items-center gap-3">
+              {/* Toggle Sidebar Button */}
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen((prev) => !prev)}
+                title={isSidebarOpen ? "Tutup Sidebar Navigasi" : "Buka Sidebar Navigasi"}
+                className="p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
+              >
+                {isSidebarOpen ? (
+                  <PanelLeftClose className="h-5 w-5 text-slate-600" />
+                ) : (
+                  <>
+                    <PanelLeftOpen className="h-5 w-5 text-slate-600" />
+                    <span className="text-xs font-bold hidden sm:inline text-slate-700">Menu</span>
+                  </>
+                )}
+              </button>
+
+              <div className="relative flex items-center justify-center">
               {status === "ACTIVE" ? (
                 <>
                   <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 block animate-ping absolute -top-0.5 -right-0.5"></span>
@@ -786,6 +821,7 @@ export default function MerchantDashboardClient({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

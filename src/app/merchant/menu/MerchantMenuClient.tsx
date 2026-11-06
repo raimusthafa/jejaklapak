@@ -20,7 +20,10 @@ import {
   X,
   ToggleLeft,
   ToggleRight,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
+import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
 
 export interface MenuItemData {
   id: string;
@@ -43,6 +46,7 @@ export default function MerchantMenuClient({
 }: MerchantMenuClientProps) {
   const merchantId = user.merchantId || "00000000-0000-4000-8000-000000000100";
   const [items, setItems] = useState<MenuItemData[]>(initialItems);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   // Modal State
@@ -185,7 +189,7 @@ export default function MerchantMenuClient({
   const outOfStockCount = totalCount - availableCount;
 
   return (
-    <div className="min-h-screen bg-[#f4f8fb] pb-20">
+    <div className="min-h-screen bg-[#f4f8fb] text-slate-800 flex">
       {/* Toast Feedback */}
       {toast && (
         <div
@@ -204,18 +208,42 @@ export default function MerchantMenuClient({
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/merchant/dashboard"
-                className="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shrink-0"
-                title="Kembali ke Dashboard"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
+      {/* Merchant Sidebar */}
+      <MerchantSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        user={user}
+        merchantName={user.merchantName}
+        merchantSlug={user.merchantSlug}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 pb-20">
+        {/* Header */}
+        <div className="bg-white border-b border-slate-200">
+          <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen((prev) => !prev)}
+                  title={isSidebarOpen ? "Tutup Sidebar Navigasi" : "Buka Sidebar Navigasi"}
+                  className="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shrink-0 cursor-pointer"
+                >
+                  {isSidebarOpen ? (
+                    <PanelLeftClose className="h-5 w-5" />
+                  ) : (
+                    <PanelLeftOpen className="h-5 w-5" />
+                  )}
+                </button>
+
+                <Link
+                  href="/merchant/dashboard"
+                  className="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shrink-0"
+                  title="Kembali ke Dashboard"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-bold text-slate-900">
@@ -522,6 +550,7 @@ export default function MerchantMenuClient({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

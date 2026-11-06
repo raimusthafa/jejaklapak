@@ -297,10 +297,35 @@ Dokumen ini mencatat riwayat kemajuan implementasi, status tahapan, dan rencana 
     - ESLint (`npm run lint`): **0 Error, 0 Warning**.
     - Next.js 16 Production Build (`npm run build`): **100% Berhasil**, 26/26 rute berhasil dikompilasi dengan Turbopack, Partial Prerendering, dan Component Caching.
 
+### 2026-11-06 (Sesi 9 — Implementasi Collapsible Sidebar Navigasi Area Pedagang)
+47. **Komponen `MerchantSidebar` Buka-Tutup (`src/components/merchant/MerchantSidebar.tsx`):**
+    - Desain menyatu dengan sistem Stitch Minimal Blue: background `bg-white`, border `border-r border-slate-200/90`, dan highlight aktif `#e6f6fc` / `#0284c7`.
+    - Mini Card Lapak: Menampilkan emoji gerobak, nama lapak, kode tracker `#BDG-XXXX`, serta status siaran langsung (Aktif Berjualan hijau berkedip, Jeda Istirahat, atau Tutup).
+    - Daftar Menu Utama Terstruktur:
+      1. **Dashboard Lapak** (`/merchant/dashboard`): ringkasan telemetri, live map, dan status siaran (dilengkapi badge "Live" saat sesi aktif).
+      2. **Kelola Menu & Stok** (`/merchant/menu`): manajemen produk, harga, ketersediaan porsi.
+      3. **Profil Usaha** (`/merchant/profile`): rute, nomor WhatsApp, foto, alamat pangkalan.
+      4. **Jadwal Operasional** (`/merchant/schedule`): ritme jadwal mingguan.
+    - Grup Akses Cepat & Publik:
+      1. **Lihat Lapak Publik** (`/merchant/[slug]`): tautan langsung ke etalase pembeli (buka di tab baru).
+      2. **Peta Eksplorasi** (`/explore`): memantau radar lapak dari sudut pandang pembeli.
+    - Footer Profil & Logout: Avatar pedagang, nama user, role badge "Mitra Pedagang", dan tombol logout aman dengan konfirmasi modal.
+
+48. **Mekanisme Buka-Tutup (Collapsible) di Seluruh Halaman Pedagang:**
+    - Tombol sakelar buka-tutup (`PanelLeftClose` & `PanelLeftOpen`) disematkan di header dashboard dan sub-halaman pedagang.
+    - Desktop: Transisi mulus (`w-72` saat terbuka vs `w-0 overflow-hidden` saat ditutup). Kanvas peta MapLibre GL JS otomatis menyesuaikan ukuran (*auto-resize via ResizeObserver*) tanpa reload.
+    - Mobile: Berfungsi sebagai *slide-over off-canvas drawer* dengan backdrop blur semi-transparan, menutup otomatis saat tautan diklik.
+    - Terintegrasi secara serasi pada `MerchantDashboardClient`, `MerchantMenuClient`, `MerchantProfileClient`, dan `MerchantScheduleClient`.
+
+49. **Verifikasi Kualitas Kode & Produksi:**
+    - TypeScript (`npx tsc --noEmit`): **0 Error**.
+    - ESLint (`npm run lint`): **0 Error, 0 Warning**.
+    - Next.js 16 Production Build (`npm run build`): **100% Berhasil**, 26/26 rute berhasil dikompilasi dengan Turbopack dan Partial Prerendering.
+
 ---
 
 ## 🎯 Fokus Saat Ini (Current Task)
-- **CRUD Database Lengkap untuk Penjual**: ✅ **Selesai dan terverifikasi penuh** (0 error, 0 warning, 26/26 rute lolos build).
+- **Merchant Collapsible Sidebar Navigation**: ✅ **Selesai dan terverifikasi penuh**.
 
 ## ⏭️ Langkah Berikutnya (Next Task)
 - **Pengujian & Fitur Lanjutan**:

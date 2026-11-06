@@ -5,8 +5,9 @@ import Link from "next/link";
 import { MOCK_MERCHANTS } from "@/data/mock/merchants";
 import { DaySchedule, Merchant } from "@/types/merchant";
 import { updateMerchantSchedulesAction } from "@/actions/merchant";
-import { ArrowLeft, Save, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle2, AlertCircle, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { AuthUser } from "@/server/auth";
+import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
 
 export default function MerchantScheduleClient({
   user,
@@ -21,6 +22,7 @@ export default function MerchantScheduleClient({
     initialSchedules && initialSchedules.length > 0 ? initialSchedules : current.schedule
   );
   const [isPending, setIsPending] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -93,17 +95,41 @@ export default function MerchantScheduleClient({
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f8fb] pb-16">
-      <div className="bg-white border-b border-slate-200">
-        <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
-          <Link
-            href="/merchant/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#0284c7] transition"
-          >
-            <ArrowLeft className="h-4 w-4" /> Kembali ke Dashboard Pedagang
-          </Link>
+    <div className="min-h-screen bg-[#f4f8fb] text-slate-800 flex">
+      {/* Merchant Sidebar */}
+      <MerchantSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        user={user}
+        merchantName={user?.merchantName || "Lapak Saya"}
+        merchantSlug={user?.merchantSlug || current.slug}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 pb-16">
+        <div className="bg-white border-b border-slate-200">
+          <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen((prev) => !prev)}
+              title={isSidebarOpen ? "Tutup Sidebar Navigasi" : "Buka Sidebar Navigasi"}
+              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors shrink-0 cursor-pointer"
+            >
+              {isSidebarOpen ? (
+                <PanelLeftClose className="h-5 w-5" />
+              ) : (
+                <PanelLeftOpen className="h-5 w-5" />
+              )}
+            </button>
+
+            <Link
+              href="/merchant/dashboard"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#0284c7] transition"
+            >
+              <ArrowLeft className="h-4 w-4" /> Kembali ke Dashboard Pedagang
+            </Link>
+          </div>
         </div>
-      </div>
 
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 space-y-6">
         <div className="flex items-center justify-between">
@@ -198,6 +224,7 @@ export default function MerchantScheduleClient({
             </button>
           </div>
         </form>
+      </div>
       </div>
     </div>
   );
