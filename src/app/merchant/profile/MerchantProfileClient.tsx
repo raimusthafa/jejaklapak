@@ -33,6 +33,7 @@ export default function MerchantProfileClient({
 
   const [isPending, setIsPending] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     async function fetchMerchantData() {
@@ -69,6 +70,7 @@ export default function MerchantProfileClient({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsPending(true);
+    setErrors({});
 
     const formData = new FormData();
     formData.append("name", name);
@@ -83,8 +85,12 @@ export default function MerchantProfileClient({
     setIsPending(false);
 
     if (result.ok) {
+      setErrors({});
       toast.success(result.message || "Profil berhasil diperbarui!");
     } else {
+      if (result.errors) {
+        setErrors(result.errors);
+      }
       toast.error(result.message || "Gagal memperbarui profil.");
     }
   };
@@ -164,8 +170,15 @@ export default function MerchantProfileClient({
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+                className={`w-full rounded-xl border px-3 py-2 text-slate-900 focus:outline-none focus:ring-1 transition ${
+                  errors.name
+                    ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                    : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                }`}
               />
+              {errors.name && (
+                <p className="mt-1 text-[11px] text-rose-600 font-medium">{errors.name[0]}</p>
+              )}
             </div>
 
             <div>
@@ -173,7 +186,11 @@ export default function MerchantProfileClient({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as MerchantCategory)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+                className={`w-full rounded-xl border px-3 py-2 text-slate-900 bg-white focus:outline-none focus:ring-1 transition ${
+                  errors.category
+                    ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                    : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                }`}
               >
                 {CATEGORIES.filter((c) => c !== "Semua Kategori").map((c) => (
                   <option key={c} value={c}>
@@ -181,6 +198,9 @@ export default function MerchantProfileClient({
                   </option>
                 ))}
               </select>
+              {errors.category && (
+                <p className="mt-1 text-[11px] text-rose-600 font-medium">{errors.category[0]}</p>
+              )}
             </div>
           </div>
 
@@ -190,7 +210,7 @@ export default function MerchantProfileClient({
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] focus:outline-none"
             />
           </div>
 
@@ -202,8 +222,15 @@ export default function MerchantProfileClient({
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+                className={`w-full rounded-xl border px-3 py-2 text-slate-900 focus:outline-none focus:ring-1 transition ${
+                  errors.phone
+                    ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                    : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                }`}
               />
+              {errors.phone && (
+                <p className="mt-1 text-[11px] text-rose-600 font-medium">{errors.phone[0]}</p>
+              )}
             </div>
 
             <div>
@@ -211,7 +238,11 @@ export default function MerchantProfileClient({
               <select
                 value={district}
                 onChange={(e) => setDistrict(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+                className={`w-full rounded-xl border px-3 py-2 text-slate-900 bg-white focus:outline-none focus:ring-1 transition ${
+                  errors.district
+                    ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                    : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                }`}
               >
                 {BANDUNG_DISTRICTS.map((d) => (
                   <option key={d} value={d}>
@@ -219,6 +250,9 @@ export default function MerchantProfileClient({
                   </option>
                 ))}
               </select>
+              {errors.district && (
+                <p className="mt-1 text-[11px] text-rose-600 font-medium">{errors.district[0]}</p>
+              )}
             </div>
           </div>
 
@@ -230,8 +264,15 @@ export default function MerchantProfileClient({
                 required
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+                className={`w-full rounded-xl border px-3 py-2 text-slate-900 focus:outline-none focus:ring-1 transition ${
+                  errors.address
+                    ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                    : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                }`}
               />
+              {errors.address && (
+                <p className="mt-1 text-[11px] text-rose-600 font-medium">{errors.address[0]}</p>
+              )}
             </div>
 
             <div>
@@ -241,8 +282,15 @@ export default function MerchantProfileClient({
                 required
                 value={operatingArea}
                 onChange={(e) => setOperatingArea(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+                className={`w-full rounded-xl border px-3 py-2 text-slate-900 focus:outline-none focus:ring-1 transition ${
+                  errors.operatingArea
+                    ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
+                    : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
+                }`}
               />
+              {errors.operatingArea && (
+                <p className="mt-1 text-[11px] text-rose-600 font-medium">{errors.operatingArea[0]}</p>
+              )}
             </div>
           </div>
 

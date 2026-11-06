@@ -88,8 +88,12 @@ export default function MerchantMenuClient({
   const handleSubmitForm = (e: React.FormEvent) => {
     e.preventDefault();
     const priceNum = parseInt(formPrice, 10);
-    if (!formName.trim() || isNaN(priceNum) || priceNum < 500) {
-      showToast("error", "Nama menu dan harga minimal Rp 500 wajib diisi.");
+    if (!formName.trim() || formName.trim().length < 2) {
+      showToast("error", "Nama menu makanan / minuman minimal 2 karakter.");
+      return;
+    }
+    if (isNaN(priceNum) || priceNum < 500) {
+      showToast("error", "Harga menu minimal Rp 500.");
       return;
     }
 
@@ -429,7 +433,7 @@ export default function MerchantMenuClient({
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="Contoh: Cuanki Spesial Komplit"
                   required
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] focus:outline-none"
                 />
               </div>
 
@@ -445,7 +449,7 @@ export default function MerchantMenuClient({
                   min="500"
                   step="500"
                   required
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none tabular-nums"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] focus:outline-none tabular-nums"
                 />
               </div>
 
@@ -458,7 +462,7 @@ export default function MerchantMenuClient({
                   value={formDesc}
                   onChange={(e) => setFormDesc(e.target.value)}
                   placeholder="Contoh: Isi 3 bakso halus, 2 siomay, tahu sutra, dan taburan seledri & bawang goreng"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-emerald-600 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-900 focus:border-[#0284c7] focus:ring-1 focus:ring-[#0284c7] focus:outline-none"
                 />
               </div>
 

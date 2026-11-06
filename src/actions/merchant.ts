@@ -41,10 +41,12 @@ export async function updateMerchantProfileAction(
   const parsed = merchantProfileSchema.safeParse(rawData);
 
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const firstErrorMessage = Object.values(fieldErrors).flat()[0];
     return {
       ok: false,
-      errors: parsed.error.flatten().fieldErrors,
-      message: "Data profil tidak valid.",
+      errors: fieldErrors,
+      message: firstErrorMessage || "Data profil tidak valid.",
     };
   }
 
@@ -160,10 +162,12 @@ export async function createMenuItemAction(
   const parsed = menuItemSchema.safeParse(rawData);
 
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const firstErrorMessage = Object.values(fieldErrors).flat()[0];
     return {
       ok: false,
-      errors: parsed.error.flatten().fieldErrors,
-      message: "Data menu tidak lengkap atau tidak valid.",
+      errors: fieldErrors,
+      message: firstErrorMessage || "Data menu tidak lengkap atau tidak valid.",
     };
   }
 
@@ -202,10 +206,12 @@ export async function updateMenuItemAction(
   const parsed = menuItemSchema.safeParse(rawData);
 
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors;
+    const firstErrorMessage = Object.values(fieldErrors).flat()[0];
     return {
       ok: false,
-      errors: parsed.error.flatten().fieldErrors,
-      message: "Periksa kembali input menu Anda.",
+      errors: fieldErrors,
+      message: firstErrorMessage || "Periksa kembali input menu Anda.",
     };
   }
 

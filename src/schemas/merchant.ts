@@ -1,13 +1,13 @@
 import { z } from "zod";
 
 export const merchantProfileSchema = z.object({
-  name: z.string().min(3, "Nama usaha minimal 3 karakter"),
+  name: z.string().min(2, "Nama usaha minimal 2 karakter"),
   description: z.string().optional(),
-  category: z.string().min(2, "Kategori wajib dipilih"),
-  phone: z.string().min(10, "Nomor WhatsApp minimal 10 digit"),
-  address: z.string().min(5, "Alamat pangkalan wajib diisi"),
-  district: z.string().min(2, "Kecamatan wajib dipilih"),
-  operatingArea: z.string().min(3, "Area rute keliling wajib diisi"),
+  category: z.string().min(1, "Kategori kuliner wajib dipilih"),
+  phone: z.string().min(8, "Nomor WhatsApp minimal 8 digit"),
+  address: z.string().min(3, "Alamat pangkalan standby minimal 3 karakter (contoh: Depan ITB / Jl. Dago)"),
+  district: z.string().min(1, "Kecamatan basis wajib dipilih"),
+  operatingArea: z.string().min(2, "Area rute keliling minimal 2 karakter (contoh: Dago, Dipati Ukur)"),
 });
 
 export type MerchantProfileInput = z.infer<typeof merchantProfileSchema>;
