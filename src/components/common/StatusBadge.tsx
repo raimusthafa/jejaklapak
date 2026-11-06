@@ -75,11 +75,16 @@ export function FreshnessBadge({
   const [currentTimestamp, setCurrentTimestamp] = useState<number | null>(null);
 
   useEffect(() => {
-    setCurrentTimestamp(Date.now());
+    const timer = setTimeout(() => {
+      setCurrentTimestamp(Date.now());
+    }, 0);
     const id = setInterval(() => {
       setCurrentTimestamp(Date.now());
     }, 30000);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(id);
+    };
   }, []);
 
   // During SSR and initial client hydration, strictly use initialFreshness

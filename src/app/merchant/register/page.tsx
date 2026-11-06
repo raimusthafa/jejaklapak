@@ -18,11 +18,11 @@ export default function MerchantRegisterPage() {
   useEffect(() => {
     if (state.ok) {
       const timer = setTimeout(() => {
-        router.push("/merchant/dashboard");
+        router.push(state.redirectTo || "/merchant/login");
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [state.ok, router]);
+  }, [state.ok, state.redirectTo, router]);
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">

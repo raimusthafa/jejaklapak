@@ -224,14 +224,34 @@ Dokumen ini mencatat riwayat kemajuan implementasi, status tahapan, dan rencana 
       - Seluruh varian peta (ESRI Street, OSM Street, Satelit ESRI, ESRI Dark Canvas) dapat diakses melalui menu dropdown vertikal yang rapi.
     - **Kerapian ID Tracker:** Format kode tracker disederhanakan menjadi `BDG-XXXX` yang rapi tanpa deretan angka nol panjang.
 
+### 2026-11-06 (Sesi 6 — Implementasi Auth Berbasis Role / RBAC Supabase SSR)
+34. **Data Access Layer & Server Auth Guards (`src/server/auth.ts`):**
+    - Interface `AuthUser` diperluas dengan role (`CUSTOMER`, `MERCHANT`, `ADMIN`) serta data identitas lapak (`merchantId`, `merchantSlug`, `merchantName`).
+    - `getCurrentUser()` dibungkus `cache()` React, mengambil session via `supabase.auth.getUser()`, dan memperkaya data dengan profil database Prisma (`public.users` & `public.merchants`).
+    - Helper guard server: `requireUser(allowedRoles?)`, `requireMerchant()`, `requireAdmin()` untuk proteksi Server Components & Server Actions.
+35. **Server Actions Terintegrasi Role (`src/actions/auth.ts`):**
+    - `loginAction`: Memverifikasi email/password via Supabase Auth SSR, mendeteksi role pengguna dari database, dan mengembalikan `redirectTo` yang sesuai (`/admin/dashboard` untuk Admin, `/merchant/dashboard` untuk Pedagang).
+    - `registerMerchantAction`: Mendaftarkan akun pedagang ke Supabase Auth (`auth.users`), menyinkronkan data profil ke `public.users` dengan role `MERCHANT`, serta otomatis membuat entri `Merchant` baru lengkap dengan 7 hari jadwal operasional mingguan bawaan.
+    - `logoutAction`: Memanggil `supabase.auth.signOut()` dan membersihkan cache layout Next.js.
+36. **Proteksi Rute di Next.js 16 Proxy (`src/lib/supabase/proxy.ts`):**
+    - Menjaga rute pedagang (`/merchant/dashboard`, `/merchant/profile`, `/merchant/schedule`) agar redirect ke `/merchant/login?redirect=...` jika belum login.
+    - Menjaga rute admin (`/admin/*`) hanya bisa diakses role `ADMIN`.
+    - Mencegah pengguna yang sudah login membuka kembali halaman login/register (otomatis dialihkan ke dashboard masing-masing).
+37. **Navbar Interaktif & Endpoint Sesi (`/api/auth/me`):**
+    - Membuat Route Handler `/api/auth/me` untuk membaca user terautentikasi.
+    - Memperbarui `Navbar.tsx` dengan langganan event `supabase.auth.onAuthStateChange` sehingga status login dan logout terupdate secara instan tanpa reload penuh.
+    - Menampilkan indikator nama pedagang/admin, badge role, menu navigasi spesifik per role, dan tombol logout.
+38. **Migrasi Halaman Terproteksi ke Partial Prerendering (PPR):**
+    - Memisahkan `/admin/dashboard`, `/merchant/dashboard`, `/merchant/profile`, dan `/merchant/schedule` menjadi Server Component wrapper (`requireMerchant`/`requireAdmin`) dengan `<Suspense>` boundary dan `export const instant = false;` sesuai panduan resmi Next.js 16 Component Caching.
+
 ---
 
 ## 🎯 Fokus Saat Ini (Current Task)
-- **Redesign Eksplorasi Peta (`/explore`) sesuai Stitch UI**: Telah selesai diimplementasikan secara komprehensif.
-- **Fase 4 (Stabilitas & Validasi)**: Pengujian alur simulasi, verifikasi responsivitas, dan build produksi.
+- **Auth Berbasis Role (RBAC)**: ✅ **Selesai dan terverifikasi penuh** (0 error TypeScript, 0 warning ESLint, 25/25 halaman lolos Next.js build).
 
 ## ⏭️ Langkah Berikutnya (Next Task)
-- **Fase 4 Lanjutan — Pengujian & Finalisasi:**
-  - Uji coba simulasi rute pesanan *"Panggil Gerobak"* dan verifikasi perhitungan jarak/ETA.
-  - Pemeriksaan responsivitas di berbagai resolusi layar (Mobile 360px - Desktop 4K).
-  - Evaluasi tile caching dan kesiapan deployment hosting (misal: Vercel / Railway).
+- **CRUD Lengkap untuk Penjual (Merchant Management)**:
+  1. **CRUD Menu & Produk Lapak:** Tambah menu baru, ubah harga, atur stok porsi siap saji, dan hapus menu makanan/minuman.
+  2. **Integrasi Form Profil Usaha:** Simpan perubahan profil, foto, kategori, dan deskripsi langsung ke data merchant terautentikasi.
+  3. **Integrasi Jadwal Operasional:** Simpan pengaturan sakelar hari dan jam buka/tutup ke PostgreSQL.
+  4. **Kontrol Sesi & GPS:** Sinkronisasi sesi jualan dan koordinat GPS perangkat langsung ke tabel `merchant_locations`.

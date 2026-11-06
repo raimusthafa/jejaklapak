@@ -35,9 +35,57 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // Refresh auth token
-  await supabase.auth.getUser();
+  // Refresh auth token dan dapatkan user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const pathname = request.nextUrl.pathname;
+
+  // Daftar rute terlindungi khusus pedagang
+  const protectedMerchantRoutes = [
+    "/merchant/dashboard",
+    "/merchant/profile",
+    "/merchant/schedule",
+  ];
+  const isProtectedMerchantRoute = protectedMerchantRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+
+  // Daftar rute terlindungi khusus admin
+  const isAdminRoute = pathname.startsWith("/admin");
+
+  // 1. Belum login mencoba akses area terproteksi -> redirect ke login
+  if (!user && (isProtectedMerchantRoute || isAdminRoute)) {
+    const loginUrl = new URL("/merchant/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // 2. Sudah login mencoba buka login / register -> redirect ke dashboard
+  if (user && (pathname === "/merchant/login" || pathname === "/merchant/register")) {
+    const role =
+      (user.app_metadata?.role as string) ||
+      (user.user_metadata?.role as string) ||
+      (user.email?.toLowerCase().includes("admin") ? "ADMIN" : "MERCHANT");
+
+    if (role === "ADMIN") {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+    }
+    return NextResponse.redirect(new URL("/merchant/dashboard", request.url));
+  }
+
+  // 3. User bukan ADMIN mencoba akses area /admin -> redirect ke dashboard pedagang
+  if (user && isAdminRoute) {
+    const role =
+      (user.app_metadata?.role as string) ||
+      (user.user_metadata?.role as string) ||
+      (user.email?.toLowerCase().includes("admin") ? "ADMIN" : "MERCHANT");
+
+    if (role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/merchant/dashboard", request.url));
+    }
+  }
 
   return response;
 }
-
