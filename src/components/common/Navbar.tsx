@@ -13,6 +13,7 @@ import {
   LogOut,
   Calendar,
   User as UserIcon,
+  UtensilsCrossed,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { logoutAction } from "@/actions/auth";
@@ -85,6 +86,7 @@ export function Navbar() {
     ...(currentUser?.role === "MERCHANT"
       ? [
           { href: "/merchant/dashboard", label: "Dashboard Lapak", icon: Store },
+          { href: "/merchant/menu", label: "Menu", icon: UtensilsCrossed },
           { href: "/merchant/profile", label: "Profil", icon: UserIcon },
           { href: "/merchant/schedule", label: "Jadwal", icon: Calendar },
         ]

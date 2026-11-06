@@ -1,15 +1,20 @@
 "use server";
 
-import { requireUser } from "@/server/auth";
+import { requireUser, requireMerchant } from "@/server/auth";
 import {
   merchantProfileSchema,
   updateScheduleSchema,
   sellingSessionActionSchema,
+  menuItemSchema,
 } from "@/schemas/merchant";
 import {
   updateMerchantProfile,
   updateMerchantSchedules,
   updateSellingSession,
+  createMenuItem,
+  updateMenuItem,
+  deleteMenuItem,
+  toggleMenuItemAvailability,
 } from "@/server/merchants";
 import { revalidatePath } from "next/cache";
 
@@ -132,6 +137,146 @@ export async function toggleSellingSessionAction(
     return {
       ok: false,
       message: err instanceof Error ? err.message : "Gagal mengubah status sesi.",
+    };
+  }
+}
+
+/**
+ * Server Action: Tambah Menu Baru
+ */
+export async function createMenuItemAction(
+  merchantId: string,
+  formData: FormData
+): Promise<MerchantActionResult> {
+  const user = await requireMerchant();
+  if (user.role !== "ADMIN" && user.merchantId && user.merchantId !== merchantId) {
+    return { ok: false, message: "Akses ditolak: Anda bukan pemilik lapak ini." };
+  }
+
+  const rawData = Object.fromEntries(formData.entries());
+  const parsed = menuItemSchema.safeParse(rawData);
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      errors: parsed.error.flatten().fieldErrors,
+      message: "Data menu tidak lengkap atau tidak valid.",
+    };
+  }
+
+  try {
+    await createMenuItem(merchantId, parsed.data);
+    revalidatePath("/merchant/menu");
+    revalidatePath("/merchant/dashboard");
+    revalidatePath("/explore");
+    return {
+      ok: true,
+      message: `Menu "${parsed.data.name}" berhasil ditambahkan!`,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : "Gagal menambahkan menu.",
+    };
+  }
+}
+
+/**
+ * Server Action: Update Menu yang Ada
+ */
+export async function updateMenuItemAction(
+  merchantId: string,
+  menuItemId: string,
+  formData: FormData
+): Promise<MerchantActionResult> {
+  const user = await requireMerchant();
+  if (user.role !== "ADMIN" && user.merchantId && user.merchantId !== merchantId) {
+    return { ok: false, message: "Akses ditolak: Anda bukan pemilik lapak ini." };
+  }
+
+  const rawData = Object.fromEntries(formData.entries());
+  const parsed = menuItemSchema.safeParse(rawData);
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      errors: parsed.error.flatten().fieldErrors,
+      message: "Periksa kembali input menu Anda.",
+    };
+  }
+
+  try {
+    await updateMenuItem(menuItemId, parsed.data);
+    revalidatePath("/merchant/menu");
+    revalidatePath("/merchant/dashboard");
+    revalidatePath("/explore");
+    return {
+      ok: true,
+      message: "Menu berhasil diperbarui!",
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : "Gagal memperbarui menu.",
+    };
+  }
+}
+
+/**
+ * Server Action: Hapus Menu
+ */
+export async function deleteMenuItemAction(
+  merchantId: string,
+  menuItemId: string
+): Promise<MerchantActionResult> {
+  const user = await requireMerchant();
+  if (user.role !== "ADMIN" && user.merchantId && user.merchantId !== merchantId) {
+    return { ok: false, message: "Akses ditolak: Anda bukan pemilik lapak ini." };
+  }
+
+  try {
+    await deleteMenuItem(menuItemId);
+    revalidatePath("/merchant/menu");
+    revalidatePath("/merchant/dashboard");
+    revalidatePath("/explore");
+    return {
+      ok: true,
+      message: "Menu berhasil dihapus dari lapak.",
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : "Gagal menghapus menu.",
+    };
+  }
+}
+
+/**
+ * Server Action: Toggle Ketersediaan Menu (Tersedia / Habis)
+ */
+export async function toggleMenuItemAvailabilityAction(
+  merchantId: string,
+  menuItemId: string,
+  isAvailable: boolean
+): Promise<MerchantActionResult> {
+  const user = await requireMerchant();
+  if (user.role !== "ADMIN" && user.merchantId && user.merchantId !== merchantId) {
+    return { ok: false, message: "Akses ditolak." };
+  }
+
+  try {
+    await toggleMenuItemAvailability(menuItemId, isAvailable);
+    revalidatePath("/merchant/menu");
+    revalidatePath("/merchant/dashboard");
+    revalidatePath("/explore");
+    return {
+      ok: true,
+      message: isAvailable ? "Menu ditandai Tersedia." : "Menu ditandai Habis.",
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : "Gagal mengubah status menu.",
     };
   }
 }

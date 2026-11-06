@@ -33,3 +33,12 @@ export const sellingSessionActionSchema = z.object({
 
 export type SellingSessionActionInput = z.infer<typeof sellingSessionActionSchema>;
 
+export const menuItemSchema = z.object({
+  name: z.string().min(2, "Nama menu minimal 2 karakter"),
+  description: z.string().optional().default(""),
+  price: z.coerce.number().min(500, "Harga minimal Rp 500"),
+  image: z.string().optional(),
+  isAvailable: z.coerce.boolean().default(true),
+});
+
+export type MenuItemInput = z.infer<typeof menuItemSchema>;

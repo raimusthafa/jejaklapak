@@ -4,7 +4,7 @@ import { merchantService } from "@/services/mock/merchantService";
 import { MOCK_MERCHANTS } from "@/data/mock/merchants";
 import { Merchant, MerchantCategory } from "@/types/merchant";
 import { LngLat } from "@/types/location";
-import { MerchantProfileInput, UpdateScheduleInput } from "@/schemas/merchant";
+import { MerchantProfileInput, UpdateScheduleInput, MenuItemInput } from "@/schemas/merchant";
 
 const CATEGORY_EMOJI: Record<string, string> = {
   "Makanan Berat": "🍲",
@@ -364,4 +364,133 @@ export async function recordMerchantGpsLocation(
   merchantService.updateLocation(merchantId, latitude, longitude, "Posisi GPS Aktual");
 
   return { ok: true, latitude, longitude };
+}
+
+/**
+ * Mengambil daftar menu untuk lapak merchant tertentu.
+ */
+export async function getMerchantMenuItems(merchantId: string) {
+  try {
+    const isDbLive = await isDatabaseAvailable();
+    if (isDbLive) {
+      const targetId = await resolveMerchantId(merchantId);
+      const items = await prisma.menuItem.findMany({
+        where: { merchantId: targetId },
+        orderBy: { createdAt: "asc" },
+      });
+      return items;
+    }
+  } catch (err) {
+    console.warn("DB get menu items failed, fallback to mock:", err);
+  }
+
+  // Fallback to mock merchant's menu
+  const mockMerchant = (await getPublicMerchants()).find(
+    (m) => m.id === merchantId || m.slug === "cuanki-batagor-serayu-keliling"
+  );
+  return (mockMerchant?.menu || []).map((item) => ({
+    id: item.id,
+    merchantId: mockMerchant?.id || merchantId,
+    name: item.name,
+    description: item.description || "",
+    price: item.price,
+    image: null,
+    isAvailable: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+}
+
+/**
+ * Menambah menu baru untuk lapak.
+ */
+export async function createMenuItem(merchantId: string, input: MenuItemInput) {
+  try {
+    const isDbLive = await isDatabaseAvailable();
+    if (isDbLive) {
+      const targetId = await resolveMerchantId(merchantId);
+      const newItem = await prisma.menuItem.create({
+        data: {
+          merchantId: targetId,
+          name: input.name,
+          description: input.description,
+          price: input.price,
+          image: input.image,
+          isAvailable: input.isAvailable,
+        },
+      });
+      return newItem;
+    }
+  } catch (err) {
+    console.warn("DB create menu item failed:", err);
+  }
+
+  return {
+    id: `item-${Date.now()}`,
+    merchantId,
+    name: input.name,
+    description: input.description ?? "",
+    price: input.price,
+    image: input.image ?? null,
+    isAvailable: input.isAvailable ?? true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
+
+/**
+ * Memperbarui menu lapak.
+ */
+export async function updateMenuItem(
+  menuItemId: string,
+  input: Partial<MenuItemInput>
+) {
+  try {
+    const isDbLive = await isDatabaseAvailable();
+    if (isDbLive) {
+      const updated = await prisma.menuItem.update({
+        where: { id: menuItemId },
+        data: {
+          name: input.name,
+          description: input.description,
+          price: input.price,
+          image: input.image,
+          isAvailable: input.isAvailable,
+        },
+      });
+      return updated;
+    }
+  } catch (err) {
+    console.warn("DB update menu item failed:", err);
+  }
+
+  return { id: menuItemId, ...input };
+}
+
+/**
+ * Menghapus menu dari lapak.
+ */
+export async function deleteMenuItem(menuItemId: string) {
+  try {
+    const isDbLive = await isDatabaseAvailable();
+    if (isDbLive) {
+      await prisma.menuItem.delete({
+        where: { id: menuItemId },
+      });
+      return { ok: true };
+    }
+  } catch (err) {
+    console.warn("DB delete menu item failed:", err);
+  }
+  return { ok: true };
+}
+
+/**
+ * Toggle ketersediaan menu (Tersedia / Habis).
+ */
+export async function toggleMenuItemAvailability(
+  menuItemId: string,
+  isAvailable: boolean
+) {
+  return await updateMenuItem(menuItemId, { isAvailable });
 }

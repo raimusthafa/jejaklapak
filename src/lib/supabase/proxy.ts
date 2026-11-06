@@ -45,6 +45,7 @@ export async function updateSession(request: NextRequest) {
   // Daftar rute terlindungi khusus pedagang
   const protectedMerchantRoutes = [
     "/merchant/dashboard",
+    "/merchant/menu",
     "/merchant/profile",
     "/merchant/schedule",
   ];
