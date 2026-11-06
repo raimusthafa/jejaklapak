@@ -18,10 +18,11 @@ import {
 } from "@/server/merchants";
 import { revalidatePath } from "next/cache";
 
-export type MerchantActionResult = {
+export type MerchantActionResult<T = unknown> = {
   ok: boolean;
   message?: string;
   errors?: Record<string, string[]>;
+  data?: T;
 };
 
 /**
@@ -48,14 +49,16 @@ export async function updateMerchantProfileAction(
   }
 
   try {
-    await updateMerchantProfile(merchantId, parsed.data);
+    const updated = await updateMerchantProfile(merchantId, parsed.data);
     revalidatePath("/merchant/profile");
+    revalidatePath("/merchant/dashboard");
     revalidatePath(`/merchant/${merchantId}`);
     revalidatePath("/explore");
 
     return {
       ok: true,
       message: "Profil pedagang berhasil diperbarui!",
+      data: updated,
     };
   } catch (err) {
     return {
@@ -165,13 +168,14 @@ export async function createMenuItemAction(
   }
 
   try {
-    await createMenuItem(merchantId, parsed.data);
+    const newItem = await createMenuItem(merchantId, parsed.data);
     revalidatePath("/merchant/menu");
     revalidatePath("/merchant/dashboard");
     revalidatePath("/explore");
     return {
       ok: true,
       message: `Menu "${parsed.data.name}" berhasil ditambahkan!`,
+      data: newItem,
     };
   } catch (err) {
     return {
@@ -206,13 +210,14 @@ export async function updateMenuItemAction(
   }
 
   try {
-    await updateMenuItem(menuItemId, parsed.data);
+    const updated = await updateMenuItem(menuItemId, parsed.data);
     revalidatePath("/merchant/menu");
     revalidatePath("/merchant/dashboard");
     revalidatePath("/explore");
     return {
       ok: true,
       message: "Menu berhasil diperbarui!",
+      data: updated,
     };
   } catch (err) {
     return {

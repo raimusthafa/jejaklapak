@@ -20,14 +20,14 @@ export const scheduleDaySchema = z.object({
 });
 
 export const updateScheduleSchema = z.object({
-  merchantId: z.string().uuid().optional(),
+  merchantId: z.string().optional(),
   schedules: z.array(scheduleDaySchema),
 });
 
 export type UpdateScheduleInput = z.infer<typeof updateScheduleSchema>;
 
 export const sellingSessionActionSchema = z.object({
-  merchantId: z.string().uuid().optional(),
+  merchantId: z.string().optional(),
   action: z.enum(["START", "PAUSE", "RESUME", "END"]),
 });
 
@@ -38,7 +38,12 @@ export const menuItemSchema = z.object({
   description: z.string().optional().default(""),
   price: z.coerce.number().min(500, "Harga minimal Rp 500"),
   image: z.string().optional(),
-  isAvailable: z.coerce.boolean().default(true),
+  isAvailable: z
+    .preprocess(
+      (val) => val === true || val === "true" || val === "on" || val === 1 || val === "1",
+      z.boolean()
+    )
+    .default(true),
 });
 
 export type MenuItemInput = z.infer<typeof menuItemSchema>;

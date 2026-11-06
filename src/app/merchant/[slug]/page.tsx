@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { merchantService, calculateFreshness } from "@/services/mock/merchantService";
+import { getMerchantByIdOrSlug } from "@/server/merchants";
 import { StatusBadge, FreshnessBadge } from "@/components/common/StatusBadge";
 import {
   MapPin,
@@ -18,13 +19,15 @@ export function generateStaticParams() {
   }));
 }
 
+export const instant = false;
+
 export default async function MerchantDetailPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const merchant = merchantService.getBySlug(slug);
+  const merchant = (await getMerchantByIdOrSlug(slug)) || merchantService.getBySlug(slug);
 
   if (!merchant) {
     notFound();

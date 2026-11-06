@@ -25,14 +25,21 @@ import {
 } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 
-export default function MerchantDashboardClient({ user }: { user?: AuthUser }) {
-  const [merchant, setMerchant] = useState(MOCK_MERCHANTS[0]);
-  const [status, setStatus] = useState<SellingStatus>(merchant.sellingStatus);
-  const [lastCapturedAt, setLastCapturedAt] = useState(merchant.location.capturedAt);
+export default function MerchantDashboardClient({
+  user,
+  initialMerchant,
+}: {
+  user?: AuthUser;
+  initialMerchant?: Merchant | null;
+}) {
+  const defaultMerchant = initialMerchant || MOCK_MERCHANTS[0];
+  const [merchant, setMerchant] = useState<Merchant>(defaultMerchant);
+  const [status, setStatus] = useState<SellingStatus>(defaultMerchant.sellingStatus);
+  const [lastCapturedAt, setLastCapturedAt] = useState(defaultMerchant.location.capturedAt);
   const [showEndModal, setShowEndModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
-  const [manualLat, setManualLat] = useState(merchant.location.latitude.toString());
-  const [manualLng, setManualLng] = useState(merchant.location.longitude.toString());
+  const [manualLat, setManualLat] = useState(defaultMerchant.location.latitude.toString());
+  const [manualLng, setManualLng] = useState(defaultMerchant.location.longitude.toString());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const [isRefreshingGps, setIsRefreshingGps] = useState(false);
@@ -541,10 +548,14 @@ export default function MerchantDashboardClient({ user }: { user?: AuthUser }) {
 
                     <button
                       type="button"
-                      onClick={() => handleToggleMenuItemStock(menuItem.id, true)}
-                      className="px-3.5 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs hover:bg-emerald-200 transition-colors"
+                      onClick={() => handleToggleMenuItemStock(menuItem.id, menuItem.isAvailable ?? true)}
+                      className={`px-3.5 py-1.5 rounded-lg font-bold text-xs transition-colors ${
+                        (menuItem.isAvailable ?? true)
+                          ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                          : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                      }`}
                     >
-                      Tersedia
+                      {(menuItem.isAvailable ?? true) ? "Tersedia" : "Habis"}
                     </button>
                   </div>
                 ))}

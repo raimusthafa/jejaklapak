@@ -123,7 +123,7 @@ export default function MerchantMenuClient({
         // Create new
         const res = await createMenuItemAction(merchantId, formData);
         if (res.ok) {
-          const newItem: MenuItemData = {
+          const createdItem = (res.data as MenuItemData) || {
             id: `item-${Date.now()}`,
             merchantId,
             name: formName.trim(),
@@ -131,7 +131,7 @@ export default function MerchantMenuClient({
             description: formDesc.trim(),
             isAvailable: formAvailable,
           };
-          setItems((prev) => [...prev, newItem]);
+          setItems((prev) => [...prev, createdItem]);
           setIsFormOpen(false);
           showToast("success", res.message || "Menu baru berhasil ditambahkan!");
         } else {

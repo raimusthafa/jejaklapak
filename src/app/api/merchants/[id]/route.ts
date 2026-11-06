@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getMerchantBySlug } from "@/server/merchants";
+import { getMerchantByIdOrSlug } from "@/server/merchants";
 
 export async function GET(
   _request: Request,
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await props.params;
-    const merchant = await getMerchantBySlug(id);
+    const merchant = await getMerchantByIdOrSlug(id);
 
     if (!merchant) {
       return NextResponse.json(

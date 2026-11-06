@@ -43,8 +43,8 @@ async function resolveMerchantId(idOrSlug: string): Promise<string> {
     const merchant = await prisma.merchant.findFirst({
       where: {
         OR: [
-          { slug: "cuanki-batagor-serayu-keliling" },
           { slug: idOrSlug },
+          { slug: "cuanki-batagor-serayu-keliling" },
         ],
       },
       select: { id: true },
@@ -152,8 +152,9 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
                 price: item.price,
                 description: item.description ?? "",
                 isPopular: false,
+                isAvailable: item.isAvailable,
               }))
-            : (mockMatch?.menu || []),
+            : (mockMatch?.menu || []).map((item) => ({ ...item, isAvailable: item.isAvailable ?? true })),
         createdAt: m.createdAt.toISOString(),
       };
     });
@@ -169,6 +170,173 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
 export async function getMerchantBySlug(slug: string): Promise<Merchant | null> {
   const all = await getPublicMerchants();
   return all.find((m) => m.slug === slug) ?? null;
+}
+
+/**
+ * Mengambil detail merchant berdasarkan ID atau Slug.
+ */
+export async function getMerchantByIdOrSlug(idOrSlug: string): Promise<Merchant | null> {
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug);
+  if (isUuid) {
+    return await getMerchantForUser({ merchantId: idOrSlug });
+  }
+  return (await getMerchantBySlug(idOrSlug)) || (await getMerchantForUser({ merchantSlug: idOrSlug }));
+}
+
+/**
+ * Mengambil data merchant milik pedagang yang sedang login (termasuk status PENDING).
+ */
+export async function getMerchantForUser(user: {
+  id?: string;
+  merchantId?: string | null;
+  merchantSlug?: string | null;
+  email?: string;
+}): Promise<Merchant | null> {
+  try {
+    const isDbLive = await isDatabaseAvailable();
+    if (isDbLive && (user.merchantId || user.merchantSlug || user.id)) {
+      const dbMerchant = await prisma.merchant.findFirst({
+        where: {
+          OR: [
+            ...(user.merchantId ? [{ id: user.merchantId }] : []),
+            ...(user.merchantSlug ? [{ slug: user.merchantSlug }] : []),
+            ...(user.id ? [{ ownerId: user.id }] : []),
+          ],
+        },
+        include: {
+          schedules: { orderBy: { dayOfWeek: "asc" } },
+          menuItems: { orderBy: { createdAt: "asc" } },
+          sessions: {
+            where: { status: { in: ["ACTIVE", "PAUSED"] } },
+            orderBy: { startedAt: "desc" },
+            take: 1,
+          },
+          locations: {
+            orderBy: { capturedAt: "desc" },
+            take: 15,
+          },
+        },
+      });
+
+      if (dbMerchant) {
+        const activeSession = dbMerchant.sessions[0];
+        const latestLocation = dbMerchant.locations[0];
+        const mockMatch = MOCK_MERCHANTS.find(
+          (m) => m.slug === dbMerchant.slug || m.id === dbMerchant.id
+        );
+
+        const breadcrumbs: LngLat[] =
+          dbMerchant.locations.length > 1
+            ? dbMerchant.locations.slice().reverse().map((loc) => [loc.longitude, loc.latitude] as LngLat)
+            : (mockMatch?.breadcrumbs || []);
+
+        const DAY_NAMES = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
+        return {
+          id: dbMerchant.id,
+          ownerId: dbMerchant.ownerId,
+          ownerName: mockMatch?.ownerName ?? "Mitra Pedagang",
+          name: dbMerchant.name,
+          slug: dbMerchant.slug,
+          tagline: dbMerchant.description ?? mockMatch?.tagline ?? "",
+          description: dbMerchant.description ?? mockMatch?.description ?? "",
+          category: (dbMerchant.category as MerchantCategory) || "Makanan Berat",
+          iconEmoji: mockMatch?.iconEmoji || CATEGORY_EMOJI[dbMerchant.category] || "🍲",
+          image: dbMerchant.image ?? mockMatch?.image ?? "/images/merchants/default.jpg",
+          phone: dbMerchant.phone,
+          district: dbMerchant.district,
+          city: dbMerchant.city,
+          operatingArea: dbMerchant.operatingArea,
+          verificationStatus:
+            (dbMerchant.verificationStatus as "VERIFIED" | "PENDING" | "REJECTED") || "PENDING",
+          sellingStatus: activeSession ? (activeSession.status as "ACTIVE" | "PAUSED") : "ENDED",
+          location: {
+            id: latestLocation?.id ?? dbMerchant.id,
+            merchantId: dbMerchant.id,
+            latitude: latestLocation?.latitude ?? mockMatch?.location.latitude ?? -6.9032,
+            longitude: latestLocation?.longitude ?? mockMatch?.location.longitude ?? 107.6231,
+            accuracyMeters: latestLocation?.accuracy ?? 6,
+            heading: mockMatch?.location.heading ?? 0,
+            speedKmh: mockMatch?.location.speedKmh ?? 0,
+            batteryLevel: mockMatch?.location.batteryLevel ?? 88,
+            addressHint: dbMerchant.address || mockMatch?.location.addressHint || "Kota Bandung",
+            district: dbMerchant.district,
+            city: dbMerchant.city,
+            capturedAt: latestLocation
+              ? latestLocation.capturedAt.toISOString()
+              : (mockMatch?.location.capturedAt ?? new Date().toISOString()),
+          },
+          schedule:
+            dbMerchant.schedules.length > 0
+              ? dbMerchant.schedules.map((s) => ({
+                  dayOfWeek: s.dayOfWeek,
+                  dayName: DAY_NAMES[s.dayOfWeek] || `Hari ${s.dayOfWeek}`,
+                  isOpen: s.isOpen,
+                  startTime: s.startTime,
+                  endTime: s.endTime,
+                }))
+              : (mockMatch?.schedule || []),
+          breadcrumbs,
+          menu:
+            dbMerchant.menuItems.length > 0
+              ? dbMerchant.menuItems.map((item) => ({
+                  id: item.id,
+                  name: item.name,
+                  price: item.price,
+                  description: item.description ?? "",
+                  isPopular: false,
+                  isAvailable: item.isAvailable,
+                }))
+              : (mockMatch?.menu || []).map((item) => ({ ...item, isAvailable: item.isAvailable ?? true })),
+          createdAt: dbMerchant.createdAt.toISOString(),
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to get merchant for user from DB:", err);
+  }
+
+  // Fallback to mock merchant
+  const all = await getPublicMerchants();
+  return (
+    all.find(
+      (m) =>
+        (user.merchantSlug && m.slug === user.merchantSlug) ||
+        (user.merchantId && m.id === user.merchantId) ||
+        m.slug === "cuanki-batagor-serayu-keliling"
+    ) || all[0] || null
+  );
+}
+
+/**
+ * Mengambil jadwal operasional mingguan untuk pedagang tertentu.
+ */
+export async function getMerchantSchedules(merchantId: string) {
+  try {
+    const isDbLive = await isDatabaseAvailable();
+    if (isDbLive) {
+      const targetId = await resolveMerchantId(merchantId);
+      const dbSchedules = await prisma.merchantSchedule.findMany({
+        where: { merchantId: targetId },
+        orderBy: { dayOfWeek: "asc" },
+      });
+      if (dbSchedules.length > 0) {
+        const DAY_NAMES = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        return dbSchedules.map((s) => ({
+          dayOfWeek: s.dayOfWeek,
+          dayName: DAY_NAMES[s.dayOfWeek] || `Hari ${s.dayOfWeek}`,
+          isOpen: s.isOpen,
+          startTime: s.startTime,
+          endTime: s.endTime,
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn("DB get schedules failed, fallback to mock:", err);
+  }
+
+  // Fallback to mock default schedule
+  return MOCK_MERCHANTS[0].schedule;
 }
 
 /**

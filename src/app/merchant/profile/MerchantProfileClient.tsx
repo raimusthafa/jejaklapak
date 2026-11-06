@@ -10,18 +10,24 @@ import { CATEGORIES, BANDUNG_DISTRICTS } from "@/config/constants";
 import { ArrowLeft, Save, CheckCircle2, AlertCircle } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 
-export default function MerchantProfileClient({ user }: { user?: AuthUser }) {
-  const current = MOCK_MERCHANTS[0];
+export default function MerchantProfileClient({
+  user,
+  initialMerchant,
+}: {
+  user?: AuthUser;
+  initialMerchant?: Merchant | null;
+}) {
+  const current = initialMerchant || MOCK_MERCHANTS[0];
 
-  const [merchantId, setMerchantId] = useState(user?.merchantId || current.id);
-  const [name, setName] = useState(user?.merchantName || current.name);
-  const [description, setDescription] = useState(current.description);
-  const [category, setCategory] = useState<MerchantCategory>(current.category);
-  const [phone, setPhone] = useState(user?.phone || current.phone);
-  const [address, setAddress] = useState(current.location.addressHint);
-  const [district, setDistrict] = useState(current.district);
-  const [operatingArea, setOperatingArea] = useState(current.operatingArea);
-  const [iconEmoji, setIconEmoji] = useState(current.iconEmoji || "🍲");
+  const [merchantId, setMerchantId] = useState(initialMerchant?.id || user?.merchantId || current.id);
+  const [name, setName] = useState(initialMerchant?.name || user?.merchantName || current.name);
+  const [description, setDescription] = useState(initialMerchant?.description || current.description);
+  const [category, setCategory] = useState<MerchantCategory>(initialMerchant?.category || current.category);
+  const [phone, setPhone] = useState(initialMerchant?.phone || user?.phone || current.phone);
+  const [address, setAddress] = useState(initialMerchant?.location.addressHint || current.location.addressHint);
+  const [district, setDistrict] = useState(initialMerchant?.district || current.district);
+  const [operatingArea, setOperatingArea] = useState(initialMerchant?.operatingArea || current.operatingArea);
+  const [iconEmoji, setIconEmoji] = useState(initialMerchant?.iconEmoji || current.iconEmoji || "🍲");
 
   const [isPending, setIsPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);

@@ -16,6 +16,7 @@ export interface MenuItem {
   price: number;
   description?: string;
   isPopular?: boolean;
+  isAvailable?: boolean;
 }
 
 export interface MerchantLocation {

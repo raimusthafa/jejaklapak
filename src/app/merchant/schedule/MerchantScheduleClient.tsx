@@ -8,10 +8,18 @@ import { updateMerchantSchedulesAction } from "@/actions/merchant";
 import { ArrowLeft, Save, CheckCircle2, AlertCircle } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 
-export default function MerchantScheduleClient({ user }: { user?: AuthUser }) {
+export default function MerchantScheduleClient({
+  user,
+  initialSchedules,
+}: {
+  user?: AuthUser;
+  initialSchedules?: DaySchedule[];
+}) {
   const current = MOCK_MERCHANTS[0];
   const [merchantId, setMerchantId] = useState(user?.merchantId || current.id);
-  const [schedule, setSchedule] = useState<DaySchedule[]>(current.schedule);
+  const [schedule, setSchedule] = useState<DaySchedule[]>(
+    initialSchedules && initialSchedules.length > 0 ? initialSchedules : current.schedule
+  );
   const [isPending, setIsPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);

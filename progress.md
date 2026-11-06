@@ -269,13 +269,41 @@ Dokumen ini mencatat riwayat kemajuan implementasi, status tahapan, dan rencana 
     - ESLint (`npm run lint`): **0 Error, 0 Warning**.
     - Next.js 16 Production Build (`npm run build`): **100% Berhasil**, 26/26 rute berhasil dikompilasi dengan Turbopack, Partial Prerendering, dan Component Caching.
 
+### 2026-11-06 (Sesi 8 — Implementasi CRUD Lengkap & Sinkronisasi Database Pedagang)
+42. **Integrasi Penuh CRUD Menu Pedagang ke PostgreSQL (`menu_items`):**
+    - `createMenuItemAction`: Menambahkan menu baru ke tabel `menu_items`, mengembalikan ID UUID aktual ke UI tanpa perlu reload halaman.
+    - `updateMenuItemAction`: Menyimpan perubahan nama, deskripsi, harga, dan ketersediaan menu.
+    - `deleteMenuItemAction`: Menghapus menu dari database secara aman dengan verifikasi hak milik (`requireMerchant`).
+    - `toggleMenuItemAvailabilityAction`: Toggle sakelar ketersediaan menu (Tersedia / Habis) baik dari halaman Kelola Menu maupun dari Dashboard Pedagang dengan update optimistik dan sinkronisasi instan ke PostgreSQL.
+    - `menuItemSchema`: Menambahkan validasi `z.preprocess` untuk input boolean `isAvailable` dari `FormData` agar nilai `"false"` tidak terkonversi menjadi `true`.
+
+43. **Sinkronisasi Profil Usaha Pedagang ke PostgreSQL (`merchants`):**
+    - `getMerchantForUser`: Mengambil data merchant langsung dari database Supabase/Prisma untuk pedagang yang sedang login, mencakup pedagang baru dengan status `PENDING` verifikasi.
+    - `updateMerchantProfileAction`: Menyimpan pembaruan nama usaha, deskripsi, kategori kuliner, nomor WhatsApp, alamat pangkalan, kecamatan, dan area rute berkeliling.
+    - SSR Data Pre-population: Halaman `MerchantProfilePage` (`/merchant/profile`) kini mengisi formulir langsung dari database server-side tanpa layout shift atau flash data mock.
+
+44. **Sinkronisasi Jadwal Operasional Mingguan ke PostgreSQL (`merchant_schedules`):**
+    - `getMerchantSchedules`: Mengambil 7 entri jadwal mingguan aktual pedagang dari tabel `merchant_schedules`.
+    - `updateMerchantSchedulesAction`: Menyimpan perubahan status buka/tutup dan rentang jam operasional (0: Minggu s.d. 6: Sabtu) via batch upsert transaction.
+    - SSR Data Pre-population: Halaman `MerchantSchedulePage` (`/merchant/schedule`) memuat jadwal mingguan server-side.
+
+45. **Sinkronisasi Halaman Publik & API Pedagang:**
+    - `getMerchantByIdOrSlug`: Mendukung pencarian merchant baik menggunakan UUID database maupun slug URL.
+    - Halaman publik `/merchant/[slug]` kini dapat memuat profil, menu, dan jadwal pedagang riil dari database.
+    - Route Handler `/api/merchants/[id]` dan `/api/merchants/[id]/location` terhubung penuh dengan validasi UUID dan slug.
+
+46. **Verifikasi Kualitas Kode & Produksi:**
+    - TypeScript (`npx tsc --noEmit`): **0 Error**.
+    - ESLint (`npm run lint`): **0 Error, 0 Warning**.
+    - Next.js 16 Production Build (`npm run build`): **100% Berhasil**, 26/26 rute berhasil dikompilasi dengan Turbopack, Partial Prerendering, dan Component Caching.
+
 ---
 
 ## 🎯 Fokus Saat Ini (Current Task)
-- **Merchant UI Minimal Blue & Stitch Alignment**: ✅ **Selesai dan terverifikasi penuh**.
+- **CRUD Database Lengkap untuk Penjual**: ✅ **Selesai dan terverifikasi penuh** (0 error, 0 warning, 26/26 rute lolos build).
 
 ## ⏭️ Langkah Berikutnya (Next Task)
-- **CRUD Database Lengkap untuk Penjual**:
-  1. **CRUD Menu & Produk Lapak:** Hubungkan form tambah, edit ketersediaan, dan hapus menu langsung ke tabel `menu_items` di Supabase PostgreSQL via Server Actions.
-  2. **Persistensi Form Profil:** Hubungkan simpan profil lapak ke tabel `merchants`.
-  3. **Persistensi Jadwal Operasional:** Simpan jadwal mingguan ke tabel `operating_schedules`.
+- **Pengujian & Fitur Lanjutan**:
+  1. **Integrasi Call Bell Pembeli ke Database:** Mencatat permintaan panggilan pedagang (`customer_calls`) dari pembeli di `/explore` langsung ke tabel riwayat notifikasi.
+  2. **Push Notification / Web Audio Sound:** Suara bel notifikasi saat ada panggilan pembeli masuk ke dashboard pedagang.
+  3. **PWA Mobile Manifest & Offline Service Worker:** Penyempurnaan untuk instalasi di layar utama smartphone pedagang (*Add to Home Screen*).
