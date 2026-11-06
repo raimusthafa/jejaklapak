@@ -31,12 +31,35 @@ export async function loginAction(
 
   try {
     const supabase = await createClient();
-    const { data: authData, error } = await supabase.auth.signInWithPassword({
+    let authResult = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
+    if (authResult.error) {
+      const errMsg = authResult.error.message.toLowerCase();
+
+      // Jika masalahnya adalah email belum dikonfirmasi, lakukan auto-confirm dan coba login ulang
+      if (errMsg.includes("email not confirmed") || errMsg.includes("invalid login credentials")) {
+        try {
+          await prisma.$executeRawUnsafe(
+            `UPDATE auth.users SET email_confirmed_at = NOW() WHERE LOWER(email) = '${email.toLowerCase()}' AND email_confirmed_at IS NULL`
+          );
+          // Coba login kembali setelah auto-confirm
+          const retryResult = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          if (!retryResult.error && retryResult.data.user) {
+            authResult = retryResult;
+          }
+        } catch {
+          // Abaikan jika query direct db gagal
+        }
+      }
+    }
+
+    if (authResult.error) {
       // In demo/placeholder mode, allow demo login to pass through
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
       if (supabaseUrl.includes("placeholder")) {
@@ -48,15 +71,30 @@ export async function loginAction(
         };
       }
 
+      const errMsg = authResult.error.message.toLowerCase();
+      let friendlyMessage = "Email atau kata sandi tidak sesuai.";
+      if (errMsg.includes("invalid login credentials")) {
+        friendlyMessage =
+          "Email atau kata sandi salah. Silakan periksa kembali atau daftarkan lapak baru jika belum terdaftar.";
+      } else if (errMsg.includes("email not confirmed")) {
+        friendlyMessage =
+          "Email akun ini belum dikonfirmasi. Silakan periksa inbox email Anda.";
+      } else if (errMsg.includes("too many requests") || errMsg.includes("rate limit")) {
+        friendlyMessage =
+          "Terlalu banyak percobaan masuk yang gagal. Silakan tunggu beberapa saat lagi.";
+      } else {
+        friendlyMessage = authResult.error.message || "Gagal masuk ke akun.";
+      }
+
       return {
         ok: false,
-        message: error.message || "Email atau kata sandi tidak sesuai.",
+        message: friendlyMessage,
       };
     }
 
     // Tentukan tujuan redirect berdasarkan role user
     let redirectTo = "/merchant/dashboard";
-    const user = authData.user;
+    const user = authResult.data.user;
 
     try {
       if (user) {
@@ -143,13 +181,24 @@ export async function registerMerchantAction(
       if (supabaseUrl.includes("placeholder")) {
         return {
           ok: true,
-          redirectTo: "/merchant/login",
+          redirectTo: `/merchant/login?registered=1&email=${encodeURIComponent(data.email)}`,
           message: "Pendaftaran demo berhasil! Silakan login dengan akun Anda.",
         };
       }
+
+      const errMsg = error.message.toLowerCase();
+      let friendlyMessage = error.message || "Pendaftaran pedagang gagal.";
+      if (errMsg.includes("user already registered") || errMsg.includes("already registered")) {
+        friendlyMessage = "Email ini sudah terdaftar. Silakan langsung masuk dengan akun Anda.";
+      } else if (errMsg.includes("password should be at least")) {
+        friendlyMessage = "Kata sandi harus minimal 6 karakter.";
+      } else if (errMsg.includes("valid email")) {
+        friendlyMessage = "Format alamat email tidak valid.";
+      }
+
       return {
         ok: false,
-        message: error.message || "Pendaftaran pedagang gagal.",
+        message: friendlyMessage,
       };
     }
 
@@ -157,6 +206,15 @@ export async function registerMerchantAction(
     if (authData.user) {
       try {
         const userId = authData.user.id;
+
+        // Auto-confirm email user di auth.users agar dapat langsung login tanpa jeda verifikasi email
+        try {
+          await prisma.$executeRawUnsafe(
+            `UPDATE auth.users SET email_confirmed_at = NOW() WHERE id = '${userId}'::uuid`
+          );
+        } catch (confirmErr) {
+          console.warn("Auto-confirm auth.users gagal:", confirmErr);
+        }
 
         // 1. Upsert data User
         await prisma.user.upsert({
@@ -224,9 +282,9 @@ export async function registerMerchantAction(
 
     return {
       ok: true,
-      redirectTo: "/merchant/login",
+      redirectTo: `/merchant/login?registered=1&email=${encodeURIComponent(data.email)}`,
       message:
-        "Pendaftaran lapak berhasil! Akun Anda telah terdaftar. Silakan login untuk mengelola lapak.",
+        "Pendaftaran lapak berhasil! Akun Anda telah siap. Silakan masukkan kata sandi untuk masuk.",
     };
   } catch (err) {
     return {

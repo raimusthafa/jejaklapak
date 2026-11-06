@@ -3,7 +3,7 @@
 import { useActionState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Store, User, Mail, Phone, Lock, CheckCircle2, MapPin, Navigation } from "lucide-react";
+import { Store, User, Mail, Phone, Lock, CheckCircle2, MapPin, Navigation, AlertCircle, Loader2 } from "lucide-react";
 import { CATEGORIES, BANDUNG_DISTRICTS } from "@/config/constants";
 import { registerMerchantAction, type ActionState } from "@/actions/auth";
 import { toast } from "@/components/ui/sonner";
@@ -44,6 +44,16 @@ export default function MerchantRegisterPage() {
             Bantu pembeli di Bandung Raya menemukan keberadaan gerobakmu setiap hari.
           </p>
         </div>
+
+        {state.message && !state.ok && (
+          <div className="flex items-start gap-3 rounded-xl bg-rose-50 border border-rose-200/90 p-3.5 text-xs text-rose-800">
+            <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <p className="font-bold text-rose-900">Pendaftaran Gagal</p>
+              <p className="text-rose-700 leading-relaxed">{state.message}</p>
+            </div>
+          </div>
+        )}
 
         {state.ok ? (
           <div className="py-8 text-center space-y-3">
@@ -215,9 +225,16 @@ export default function MerchantRegisterPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="w-full flex items-center justify-center rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] py-3 text-xs font-bold text-slate-900 shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] py-3 text-xs font-bold text-slate-900 shadow-sm transition-all disabled:opacity-50 cursor-pointer"
             >
-              {isPending ? "Mendaftarkan Usaha..." : "Daftar & Masuk Dashboard"}
+              {isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-900" />
+                  <span>Mendaftarkan Usaha...</span>
+                </>
+              ) : (
+                "Daftar & Masuk Dashboard"
+              )}
             </button>
           </form>
         )}
