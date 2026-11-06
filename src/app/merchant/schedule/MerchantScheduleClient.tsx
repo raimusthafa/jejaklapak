@@ -85,12 +85,12 @@ export default function MerchantScheduleClient({ user }: { user?: AuthUser }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/70 pb-16">
+    <div className="min-h-screen bg-[#f4f8fb] pb-16">
       <div className="bg-white border-b border-slate-200">
         <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
           <Link
             href="/merchant/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-emerald-700 transition"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#0284c7] transition"
           >
             <ArrowLeft className="h-4 w-4" /> Kembali ke Dashboard Pedagang
           </Link>
@@ -183,7 +183,7 @@ export default function MerchantScheduleClient({ user }: { user?: AuthUser }) {
             <button
               type="submit"
               disabled={isPending}
-              className="flex items-center gap-2 rounded-xl bg-emerald-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-800 transition disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] px-5 py-2.5 text-xs font-bold text-slate-900 shadow-sm transition disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
               {isPending ? "Menyimpan ke Server..." : "Simpan Jadwal Mingguan"}

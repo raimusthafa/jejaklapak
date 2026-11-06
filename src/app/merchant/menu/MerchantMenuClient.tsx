@@ -185,7 +185,7 @@ export default function MerchantMenuClient({
   const outOfStockCount = totalCount - availableCount;
 
   return (
-    <div className="min-h-screen bg-slate-50/70 pb-20">
+    <div className="min-h-screen bg-[#f4f8fb] pb-20">
       {/* Toast Feedback */}
       {toast && (
         <div
@@ -196,7 +196,7 @@ export default function MerchantMenuClient({
           }`}
         >
           {toast.type === "success" ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-[#60C1E5] shrink-0" />
           ) : (
             <AlertCircle className="h-4 w-4 text-rose-400 shrink-0" />
           )}
@@ -219,9 +219,9 @@ export default function MerchantMenuClient({
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl font-bold text-slate-900">
-                    Kelola Menu & Produk Lapak
+                    Kelola Menu &amp; Produk Lapak
                   </h1>
-                  <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">
+                  <span className="rounded bg-[#e6f6fc] px-2 py-0.5 text-[10px] font-semibold text-[#0284c7] border border-sky-200">
                     {user.merchantName || "Lapak Saya"}
                   </span>
                 </div>
@@ -234,7 +234,7 @@ export default function MerchantMenuClient({
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-800 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] px-4 py-2.5 text-xs font-bold text-slate-900 shadow-sm transition"
             >
               <Plus className="h-4 w-4" />
               Tambah Menu Baru
@@ -477,7 +477,7 @@ export default function MerchantMenuClient({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="rounded-xl bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition disabled:opacity-50"
+                  className="rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] px-4 py-2 text-xs font-bold text-slate-900 transition disabled:opacity-50"
                 >
                   {isPending ? "Menyimpan..." : "Simpan Menu"}
                 </button>

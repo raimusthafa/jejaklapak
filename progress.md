@@ -244,14 +244,38 @@ Dokumen ini mencatat riwayat kemajuan implementasi, status tahapan, dan rencana 
 38. **Migrasi Halaman Terproteksi ke Partial Prerendering (PPR):**
     - Memisahkan `/admin/dashboard`, `/merchant/dashboard`, `/merchant/profile`, dan `/merchant/schedule` menjadi Server Component wrapper (`requireMerchant`/`requireAdmin`) dengan `<Suspense>` boundary dan `export const instant = false;` sesuai panduan resmi Next.js 16 Component Caching.
 
+### 2026-11-06 (Sesi 7 — Redesign Merchant Dashboard Sesuai Stitch UI Minimal Blue & Harmonisasi Gaya)
+39. **Penerapan Desain Stitch Minimal Blue pada Dashboard Pedagang (`/merchant/dashboard`):**
+    - Mengunduh dan mengadopsi spesifikasi desain dari Google Stitch MCP (Project: *Minimal Blue UI Design*, Screen: *Dashboard Pedagang — JejakLapak*).
+    - **Header Utama:** Menampilkan live pulse status, nama lapak, kode tracker `#BDG-XXXX`, tombol status toggle utama (`Aktif Berjualan` hijau emerald vs `Mulai Berjualan` cyan `#60C1E5`), tombol aksi cepat `Jeda Istirahat`, `Tutup Lapak`, serta shortcut profil akun pedagang.
+    - **3 Kartu Ringkasan Status Atas:**
+      1. *Status GPS & Lokasi Saat Ini:* Alamat live, status sinyal siaga/aktif, dan latensi pembaruan.
+      2. *Melihat Lapak Hari Ini:* Total impresi pengunjung warga dengan indikator tren radius 500m.
+      3. *Panggilan Bel Masuk:* Jumlah panggilan bel pembeli yang menunggu tanggapan secara real-time.
+    - **Layout Grid 2 Kolom Komprehensif:**
+      - *Kolom Kiri (7 Kolom):* Peta interaktif WebGL MapLibre dengan floating indicator posisi gerobak, tombol pembaruan titik GPS instan via browser geolocation, tombol buka modal koordinat manual, dan floating telemetry status bar di bagian bawah.
+      - *Kolom Kanan (5 Kolom):*
+        - *Menu & Stok Hari Ini:* Daftar menu favorit dengan toggle sakelar ketersediaan porsi instan (1 klik), status harga, dan shortcut ke manajemen menu lengkap.
+        - *Panggilan Bel Pembeli:* Daftar interaktif pesanan panggilan pembeli, jarak tempuh, catatan khusus, serta tombol respon cepat (*"Saya Segera Merapat"* dan *"Selesai"*).
+    - **Modals Minimal Blue:** Modal konfirmasi pengakhiran sesi berjualan dan modal penyesuaian koordinat titik pangkalan gerobak manual.
+
+40. **Harmonisasi Desain Seluruh Sub-halaman Pedagang:**
+    - **Kelola Menu (`/merchant/menu`):** Mengadopsi palet Minimal Blue (background `#f4f8fb`, highlight container `#e6f6fc`, aksen `#60C1E5` / `#0284c7`), badge stok siap saji yang kontras, dan modal form tambah menu modern.
+    - **Profil Lapak (`/merchant/profile`):** Tampilan formulir terstruktur, input focus border beraksen `#0284c7`, banner preview info lapak, dan tombol simpan profil terpadu.
+    - **Jadwal Operasional (`/merchant/schedule`):** Kartu operasional 7 hari (Senin-Minggu) dengan active day highlights, input jam operasional yang serasi, dan tombol simpan berpalet Minimal Blue.
+
+41. **Verifikasi Kualitas Kode & Produksi:**
+    - TypeScript (`npx tsc --noEmit`): **0 Error**.
+    - ESLint (`npm run lint`): **0 Error, 0 Warning**.
+    - Next.js 16 Production Build (`npm run build`): **100% Berhasil**, 26/26 rute berhasil dikompilasi dengan Turbopack, Partial Prerendering, dan Component Caching.
+
 ---
 
 ## 🎯 Fokus Saat Ini (Current Task)
-- **Auth Berbasis Role (RBAC)**: ✅ **Selesai dan terverifikasi penuh** (0 error TypeScript, 0 warning ESLint, 25/25 halaman lolos Next.js build).
+- **Merchant UI Minimal Blue & Stitch Alignment**: ✅ **Selesai dan terverifikasi penuh**.
 
 ## ⏭️ Langkah Berikutnya (Next Task)
-- **CRUD Lengkap untuk Penjual (Merchant Management)**:
-  1. **CRUD Menu & Produk Lapak:** Tambah menu baru, ubah harga, atur stok porsi siap saji, dan hapus menu makanan/minuman.
-  2. **Integrasi Form Profil Usaha:** Simpan perubahan profil, foto, kategori, dan deskripsi langsung ke data merchant terautentikasi.
-  3. **Integrasi Jadwal Operasional:** Simpan pengaturan sakelar hari dan jam buka/tutup ke PostgreSQL.
-  4. **Kontrol Sesi & GPS:** Sinkronisasi sesi jualan dan koordinat GPS perangkat langsung ke tabel `merchant_locations`.
+- **CRUD Database Lengkap untuk Penjual**:
+  1. **CRUD Menu & Produk Lapak:** Hubungkan form tambah, edit ketersediaan, dan hapus menu langsung ke tabel `menu_items` di Supabase PostgreSQL via Server Actions.
+  2. **Persistensi Form Profil:** Hubungkan simpan profil lapak ke tabel `merchants`.
+  3. **Persistensi Jadwal Operasional:** Simpan jadwal mingguan ke tabel `operating_schedules`.
