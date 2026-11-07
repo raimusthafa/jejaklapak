@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Merchant } from "@/types/merchant";
 import { LngLat } from "@/types/location";
 import { merchantService } from "@/services/mock/merchantService";
@@ -15,17 +16,32 @@ import { VendorDetailDrawer } from "@/components/explore/VendorDetailDrawer";
 import { CallVendorModal } from "@/components/explore/CallVendorModal";
 import { Map as MapIcon, ListFilter, AlertCircle, PanelLeft } from "lucide-react";
 
-export default function ExplorePage() {
+function ExploreContent() {
+  const searchParams = useSearchParams();
+  const queryMerchantSlug = searchParams.get("merchant") || searchParams.get("slug");
+  const queryMerchantId = searchParams.get("id");
+
   const [allMerchants, setAllMerchants] = useState<Merchant[]>(() =>
     merchantService.getAll()
   );
-  const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(
-    () => merchantService.getAll()[0]?.id || null
-  );
+
+  // Jangan auto-select merchant saat pertama buka peta kecuali ada query parameter spesifik di URL
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string | null>(() => {
+    if (queryMerchantId) return queryMerchantId;
+    if (queryMerchantSlug) {
+      const match = merchantService.getAll().find((m) => m.slug === queryMerchantSlug);
+      return match ? match.id : null;
+    }
+    return null;
+  });
   
-  // Sidebars toggle state (in-flow desktop sidebars)
+  // Sidebars toggle state:
+  // Sidebar kiri (daftar) terbuka default di desktop
+  // Sidebar kanan (detail lapak) tertutup default, HANYA terbuka jika ada lapak yang diklik/dipilih
   const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
-  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(true);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState<boolean>(
+    Boolean(queryMerchantId || queryMerchantSlug)
+  );
 
   // Mobile drawer state
   const [drawerMerchant, setDrawerMerchant] = useState<Merchant | null>(null);
@@ -66,7 +82,24 @@ export default function ExplorePage() {
           const json = await res.json();
           if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
             setAllMerchants(json.data);
-            setSelectedMerchantId((prev) => prev || json.data[0].id);
+            setSelectedMerchantId((prev) => {
+              // Jika ada query param dari URL, utamakan
+              if (queryMerchantSlug) {
+                const matchSlug = json.data.find((m: Merchant) => m.slug === queryMerchantSlug);
+                if (matchSlug) return matchSlug.id;
+              }
+              if (queryMerchantId) {
+                const matchId = json.data.find((m: Merchant) => m.id === queryMerchantId);
+                if (matchId) return matchId.id;
+              }
+              if (!prev) return null;
+              // Jika sebelumnya user sudah memilih pedagang, sinkronkan id (jaga-jaga mock vs db id)
+              const prevInCurrent = allMerchants.find((m) => m.id === prev);
+              const match = json.data.find(
+                (m: Merchant) => m.id === prev || (prevInCurrent && m.slug === prevInCurrent.slug)
+              );
+              return match ? match.id : null;
+            });
           }
         }
       } catch (err) {
@@ -83,7 +116,7 @@ export default function ExplorePage() {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isSimulating]);
+  }, [isSimulating, queryMerchantSlug, queryMerchantId, allMerchants]);
 
   const handleRefreshMap = useCallback(async () => {
     try {
@@ -92,13 +125,20 @@ export default function ExplorePage() {
         const json = await res.json();
         if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
           setAllMerchants(json.data);
-          setSelectedMerchantId((prev) => prev || json.data[0].id);
+          setSelectedMerchantId((prev) => {
+            if (!prev) return null;
+            const prevInCurrent = allMerchants.find((m) => m.id === prev);
+            const match = json.data.find(
+              (m: Merchant) => m.id === prev || (prevInCurrent && m.slug === prevInCurrent.slug)
+            );
+            return match ? match.id : null;
+          });
         }
       }
     } catch (err) {
       console.warn("Refresh failed:", err);
     }
-  }, []);
+  }, [allMerchants]);
 
   // Subscribe to Telemetry Simulator stream
   useEffect(() => {
@@ -347,10 +387,13 @@ export default function ExplorePage() {
             COLUMN 3: RIGHT SIDEBAR (In-flow side panel, NO BACKDROP/BLUR!)
             ========================================== */}
         {isRightSidebarOpen && selectedMerchant && (
-          <aside className="hidden md:flex h-full w-[340px] xl:w-[370px] shrink-0 overflow-hidden flex-col bg-white border-l border-slate-200/80 shadow-sm z-20 transition-all duration-300">
+          <aside className="hidden md:flex h-full w-[340px] xl:w-[370px] shrink-0 overflow-hidden flex-col bg-white border-l border-slate-200/80 shadow-sm z-20 transition-all duration-300 animate-in slide-in-from-right-4">
             <VendorDetailContent
               merchant={selectedMerchant}
-              onClose={() => setIsRightSidebarOpen(false)}
+              onClose={() => {
+                setIsRightSidebarOpen(false);
+                setSelectedMerchantId(null);
+              }}
               onCallVendor={(m) => setCallModalMerchant(m)}
               followCamera={followCamera}
               onToggleFollowCamera={() => setFollowCamera(!followCamera)}
@@ -409,5 +452,19 @@ export default function ExplorePage() {
         }}
       />
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full h-[calc(100vh-64px)] bg-[#f8f9ff] flex items-center justify-center text-xs text-slate-500">
+          Memuat peta eksplorasi Bandung...
+        </div>
+      }
+    >
+      <ExploreContent />
+    </Suspense>
   );
 }
