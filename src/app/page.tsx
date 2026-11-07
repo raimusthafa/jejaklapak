@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import {
   Compass,
   Store,
@@ -24,34 +24,21 @@ import {
   Bike,
 } from "lucide-react";
 
+const LandingMapPreview = dynamic(
+  () => import("@/components/landing/LandingMapPreview"),
+  { ssr: false }
+);
+
 export default function HomePage() {
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [activePin, setActivePin] = useState<string | null>("cuanki");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    namaLapak: "",
-    kategoriLapak: "Kuliner / Jajanan Aci",
-    nomorWhatsapp: "",
-    ruteUtama: "",
-  });
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const mapApiRef = useRef<{ zoomIn: () => void; zoomOut: () => void } | null>(null);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      toast.success("Pendaftaran Berhasil Terkirim!", {
-        description: `Terima kasih! Tim relawan JejakLapak Bandung akan segera menghubungi WhatsApp ${formData.nomorWhatsapp || ""}.`,
-      });
-      setFormData({
-        namaLapak: "",
-        kategoriLapak: "Kuliner / Jajanan Aci",
-        nomorWhatsapp: "",
-        ruteUtama: "",
-      });
-    }, 700);
-  };
+  const handleMapReady = useCallback(
+    (api: { zoomIn: () => void; zoomOut: () => void }) => {
+      mapApiRef.current = api;
+    },
+    []
+  );
 
   return (
     <div className="flex flex-col w-full bg-[#f8f9ff] text-[#0d1c2e] antialiased">
@@ -111,13 +98,13 @@ export default function HomePage() {
                 <Compass className="h-5 w-5" />
                 <span>Buka Peta Eksplorasi</span>
               </Link>
-              <a
-                href="#daftar-mitra"
+              <Link
+                href="/merchant/register"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-[#e6eeff] hover:bg-[#dce9ff] text-[#0d1c2e] font-semibold text-sm transition-colors border border-[#bfc7d2]/40"
               >
                 <Store className="h-5 w-5 text-[#006194]" />
                 <span>Daftarkan Lapak Anda</span>
-              </a>
+              </Link>
             </div>
 
             {/* Live Micro-Stats Bar */}
@@ -145,40 +132,30 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right Interactive Map Radar Preview (Mock HUD Card) */}
+          {/* Right Interactive Map Preview (Real MapLibre) */}
           <div className="lg:col-span-6 relative">
             <div className="rounded-2xl bg-white p-4 shadow-xl border border-[#dce9ff] relative overflow-hidden">
-              {/* Mock Map Canvas Box */}
-              <div
-                className="relative w-full h-[360px] sm:h-[420px] rounded-xl overflow-hidden bg-[#e6eeff] flex items-center justify-center border border-[#bfc7d2]/40 transition-transform duration-300"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle, #bfc7d2 1px, transparent 1px), linear-gradient(to right, #eff4ff 1px, transparent 1px), linear-gradient(to bottom, #eff4ff 1px, transparent 1px)",
-                  backgroundSize: "24px 24px, 48px 48px, 48px 48px",
-                }}
-              >
-                {/* Dynamic SVG Radar Rings */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
-                  <div className="w-80 h-80 rounded-full border border-[#006781] animate-ping" style={{ animationDuration: "4s" }}></div>
-                  <div className="absolute w-56 h-56 rounded-full border border-[#006194]/40"></div>
-                  <div className="absolute w-32 h-32 rounded-full border border-[#006194]/60"></div>
-                </div>
+              {/* Real MapLibre Map Canvas */}
+              <div className="relative w-full h-[360px] sm:h-[420px] rounded-xl overflow-hidden border border-[#bfc7d2]/40">
+                {/* MapLibre fills this container absolutely */}
+                <LandingMapPreview onReady={handleMapReady} />
 
-                {/* Map Decorative Grid & Compass Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#233144]/80 via-transparent to-transparent pointer-events-none z-10"></div>
+                {/* Bottom gradient overlay for readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#233144]/60 via-transparent to-transparent pointer-events-none z-10" />
 
-                {/* Floating Map Controls HUD */}
+                {/* Floating Map Controls HUD — top left */}
                 <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
                   <div className="px-3 py-1 rounded-md bg-white/95 backdrop-blur-sm text-[#0d1c2e] text-xs font-semibold shadow-sm flex items-center gap-1.5 border border-[#bfc7d2]/40">
-                    <span className="w-2 h-2 rounded-full bg-[#006781] animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-[#006781] animate-pulse" />
                     <span>RADAR AKTIF • KOTA BANDUNG</span>
                   </div>
                 </div>
 
+                {/* Zoom buttons — top right */}
                 <div className="absolute top-3 right-3 z-20 flex flex-col gap-1">
                   <button
                     aria-label="Zoom in"
-                    onClick={() => setZoomLevel((z) => Math.min(z + 0.15, 1.4))}
+                    onClick={() => mapApiRef.current?.zoomIn()}
                     className="w-8 h-8 rounded bg-white text-[#0d1c2e] flex items-center justify-center shadow-sm hover:bg-[#eff4ff] transition border border-[#bfc7d2]/40"
                     type="button"
                   >
@@ -186,7 +163,7 @@ export default function HomePage() {
                   </button>
                   <button
                     aria-label="Zoom out"
-                    onClick={() => setZoomLevel((z) => Math.max(z - 0.15, 0.8))}
+                    onClick={() => mapApiRef.current?.zoomOut()}
                     className="w-8 h-8 rounded bg-white text-[#0d1c2e] flex items-center justify-center shadow-sm hover:bg-[#eff4ff] transition border border-[#bfc7d2]/40"
                     type="button"
                   >
@@ -194,40 +171,10 @@ export default function HomePage() {
                   </button>
                 </div>
 
-                {/* In-Map Floating Marker Overlays (Scaled by zoomLevel) */}
-                <div
-                  className="absolute inset-0 z-20 pointer-events-none"
-                  style={{ transform: `scale(${zoomLevel})`, transition: "transform 0.2s ease-out" }}
-                >
-                  {/* Pin 1: Cuanki Serayu */}
-                  <div
-                    onClick={() => setActivePin("cuanki")}
-                    className="absolute top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 group cursor-pointer pointer-events-auto"
-                  >
-                    <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full shadow-lg border border-[#006781]/30 hover:scale-105 transition-transform">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#006781] animate-pulse"></span>
-                      <span className="text-xs font-semibold text-[#0d1c2e]">Cuanki Serayu</span>
-                    </div>
-                    <div className="w-2.5 h-2.5 bg-white rotate-45 mx-auto -mt-1 shadow-xs border-r border-b border-[#006781]/30"></div>
-                  </div>
-
-                  {/* Pin 2: Cilor Mang Ade */}
-                  <div
-                    onClick={() => setActivePin("cilor")}
-                    className="absolute bottom-1/3 right-1/4 -translate-x-1/2 -translate-y-1/2 group cursor-pointer pointer-events-auto"
-                  >
-                    <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full shadow-lg border border-[#994100]/30 hover:scale-105 transition-transform">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#994100]"></span>
-                      <span className="text-xs font-semibold text-[#0d1c2e]">Cilor &amp; Batagor Ade</span>
-                    </div>
-                    <div className="w-2.5 h-2.5 bg-white rotate-45 mx-auto -mt-1 shadow-xs border-r border-b border-[#994100]/30"></div>
-                  </div>
-                </div>
-
                 {/* Bottom Floating Quick Status Pod */}
                 <div className="absolute bottom-3 inset-x-3 z-20 bg-white/95 backdrop-blur-md rounded-xl p-3 shadow-lg flex items-center justify-between border border-[#bfc7d2]/30">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#baeaff] flex items-center justify-center text-[#001f29]">
+                    <div className="w-10 h-10 rounded-lg bg-[#baeaff] flex items-center justify-center">
                       <Bike className="h-5 w-5 text-[#006781]" />
                     </div>
                     <div>
@@ -528,122 +475,6 @@ export default function HomePage() {
               <p className="text-sm text-[#3f4850] leading-relaxed">
                 Platform murni nirlaba komersial untuk pedagang kecil. Nol komisi potongan pesanan, menjaga ekosistem gerobak jalanan tetap mandiri.
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Banner Ajakan Merchant / Form Pendaftaran Cepat */}
-      <section className="w-full py-16 lg:py-24 px-4 lg:px-8 bg-[#f8f9ff]" id="daftar-mitra">
-        <div className="max-w-7xl mx-auto">
-          <div className="rounded-3xl bg-[#dce9ff] p-6 lg:p-12 shadow-sm border border-[#bfc7d2]/40 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            {/* Left Banner Info */}
-            <div className="lg:col-span-6 flex flex-col items-start gap-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#baeaff] text-[#001f29] text-xs font-semibold border border-[#79d8fd]">
-                <Megaphone className="h-3.5 w-3.5 text-[#006781]" />
-                Program Mitra Gerobak Bandung
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#0d1c2e] leading-snug">
-                Punya Gerobak Keliling di Bandung? Daftarkan Lapak Anda Sekarang.
-              </h2>
-              <p className="text-base text-[#3f4850] leading-relaxed">
-                Tingkatkan omzet harian dengan membagikan posisi Anda kepada ribuan penikmat kuliner di sekitar rute jalan Anda. Pendaftaran cepat hanya butuh nomor WhatsApp aktif.
-              </p>
-              <div className="space-y-2 text-sm text-[#3f4850]">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-[#006781] shrink-0" />
-                  <span>100% Gratis selamanya tanpa potongan transaksi</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-[#006781] shrink-0" />
-                  <span>Tinggal nyalakan tombol pelacak di HP sederhana saat jualan</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-[#006781] shrink-0" />
-                  <span>Diberikan stiker QR JejakLapak resmi untuk ditempel di gerobak</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Quick Sign-up Mini Form */}
-            <div className="lg:col-span-6">
-              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-[#bfc7d2]/40">
-                <h3 className="text-lg font-bold text-[#0d1c2e]">Form Pendaftaran Mitra Mandiri</h3>
-                <p className="text-xs text-[#3f4850] mt-1 mb-6">
-                  Tim relawan kami akan mengontak Anda untuk aktivasi akun dalam 24 jam.
-                </p>
-                <form className="space-y-4" onSubmit={handleFormSubmit}>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0d1c2e] mb-1" htmlFor="namaLapak">
-                      Nama Lapak / Dagangan
-                    </label>
-                    <input
-                      className="w-full px-3.5 py-2.5 rounded-lg bg-[#eff4ff] text-[#0d1c2e] text-sm focus:bg-white focus:ring-2 focus:ring-[#006194] border border-[#dce9ff] outline-none transition-all placeholder:text-[#3f4850]/50"
-                      id="namaLapak"
-                      placeholder="Contoh: Cuanki Barokah Mang Oded"
-                      required
-                      type="text"
-                      value={formData.namaLapak}
-                      onChange={(e) => setFormData({ ...formData, namaLapak: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0d1c2e] mb-1" htmlFor="kategoriLapak">
-                        Kategori Jualan
-                      </label>
-                      <select
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#eff4ff] text-[#0d1c2e] text-sm focus:bg-white focus:ring-2 focus:ring-[#006194] border border-[#dce9ff] outline-none transition-all"
-                        id="kategoriLapak"
-                        value={formData.kategoriLapak}
-                        onChange={(e) => setFormData({ ...formData, kategoriLapak: e.target.value })}
-                      >
-                        <option>Kuliner / Jajanan Aci</option>
-                        <option>Minuman / Es Tradisional</option>
-                        <option>Makanan Berat / Nasi Goreng</option>
-                        <option>Kue &amp; Roti Keliling</option>
-                        <option>Jasa (Sol Sepatu / Asah Pisau)</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-[#0d1c2e] mb-1" htmlFor="nomorWhatsapp">
-                        Nomor WhatsApp
-                      </label>
-                      <input
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-[#eff4ff] text-[#0d1c2e] text-sm focus:bg-white focus:ring-2 focus:ring-[#006194] border border-[#dce9ff] outline-none transition-all placeholder:text-[#3f4850]/50"
-                        id="nomorWhatsapp"
-                        placeholder="08xxxxxxxxxx"
-                        required
-                        type="tel"
-                        value={formData.nomorWhatsapp}
-                        onChange={(e) => setFormData({ ...formData, nomorWhatsapp: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#0d1c2e] mb-1" htmlFor="ruteUtama">
-                      Area / Rute Keliling Utama
-                    </label>
-                    <input
-                      className="w-full px-3.5 py-2.5 rounded-lg bg-[#eff4ff] text-[#0d1c2e] text-sm focus:bg-white focus:ring-2 focus:ring-[#006194] border border-[#dce9ff] outline-none transition-all placeholder:text-[#3f4850]/50"
-                      id="ruteUtama"
-                      placeholder="Contoh: Dago Atas s/d Simpang Dago"
-                      required
-                      type="text"
-                      value={formData.ruteUtama}
-                      onChange={(e) => setFormData({ ...formData, ruteUtama: e.target.value })}
-                    />
-                  </div>
-                  <button
-                    disabled={isSubmitting}
-                    className="w-full py-3.5 rounded-lg bg-[#006194] hover:bg-[#007bb9] text-white font-semibold text-sm shadow-md transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
-                    type="submit"
-                  >
-                    <Send className="h-4 w-4" />
-                    <span>{isSubmitting ? "Mengirim Data..." : "Kirim Formulir Pendaftaran"}</span>
-                  </button>
-                </form>
-              </div>
             </div>
           </div>
         </div>

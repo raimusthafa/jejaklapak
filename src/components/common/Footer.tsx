@@ -53,7 +53,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link className="text-[#3f4850] hover:text-[#006194] transition" href="/#daftar-mitra">
+                <Link className="text-[#3f4850] hover:text-[#006194] transition" href="/merchant/register">
                   Registrasi Lapak Mandiri
                 </Link>
               </li>
