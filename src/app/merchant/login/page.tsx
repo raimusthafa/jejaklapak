@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Store,
@@ -69,15 +70,23 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md space-y-6 bg-white p-8 rounded-2xl border border-slate-200/90 shadow-sm">
-      <div className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e6f6fc] text-[#0284c7]">
-          <Store className="h-6 w-6 text-[#0284c7]" />
-        </div>
-        <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-          Portal Masuk JejakLapak
+      <div className="text-center flex flex-col items-center">
+        <Link href="/" className="inline-block mb-3 transition-transform hover:scale-105">
+          <Image
+            src="/logo.png"
+            alt="JejakLapak"
+            width={160}
+            height={40}
+            style={{ width: "auto" }}
+            className="h-10 object-contain"
+            priority
+          />
+        </Link>
+        <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          Portal Masuk Pedagang
         </h2>
         <p className="mt-1 text-xs text-slate-500">
-          Masuk dengan akun terdaftar. Sistem otomatis menyesuaikan dashboard sesuai hak akses akun Anda.
+          Masuk dengan akun terdaftar untuk mengakses dashboard lapak keliling Anda.
         </p>
       </div>
 

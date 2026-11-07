@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
-  MapPin,
   Compass,
   LogOut,
 } from "lucide-react";
@@ -86,20 +86,16 @@ export function Navbar() {
     <header className="sticky top-0 z-40 w-full border-b border-[#dce9ff] bg-white/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#006194] text-white shadow-sm transition-transform group-hover:scale-105">
-            <MapPin className="h-5 w-5" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg font-bold tracking-tight text-[#0d1c2e]">
-                JejakLapak
-              </span>
-              <span className="hidden sm:inline-block rounded-full bg-[#eff4ff] px-2 py-0.5 text-[10px] font-semibold text-[#006781] border border-[#dce9ff]">
-                Bandung Raya
-              </span>
-            </div>
-          </div>
+        <Link href="/" className="flex items-center group">
+          <Image
+            src="/logo.png"
+            alt="JejakLapak"
+            width={145}
+            height={36}
+            style={{ width: "auto" }}
+            className="h-8 sm:h-9 object-contain transition-transform group-hover:scale-[1.02]"
+            priority
+          />
         </Link>
 
         {/* Action Buttons Only */}

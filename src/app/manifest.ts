@@ -7,13 +7,13 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Pelacak gerobak dan pangkalan kuliner UMKM Bandung Raya real-time",
     start_url: "/explore",
     display: "standalone",
-    background_color: "#FCFDFC",
-    theme_color: "#15803d",
+    background_color: "#f8f9ff",
+    theme_color: "#006194",
     icons: [
       {
-        src: "/favicon.ico",
-        sizes: "any",
-        type: "image/x-icon",
+        src: "/logo-icon.png",
+        sizes: "192x192",
+        type: "image/png",
       },
     ],
   };

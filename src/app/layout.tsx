@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   title: "JejakLapak — Pelacak UMKM & Pedagang Keliling Bandung Raya",
   description:
     "Temukan lokasi terkini, jadwal buka, dan rute gerobak pedagang UMKM keliling di sekitarmu secara real-time.",
+  icons: {
+    icon: "/logo-icon.png",
+    apple: "/logo-icon.png",
+  },
 };
 
 export default function RootLayout({

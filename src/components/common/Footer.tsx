@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { MapPin } from "lucide-react";
 
 export function Footer() {
   const pathname = usePathname();
@@ -24,12 +24,16 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand & mission */}
           <div className="md:col-span-2 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#006194] text-white">
-                <MapPin className="h-4 w-4" />
-              </div>
-              <span className="text-base font-bold text-[#0d1c2e]">JejakLapak</span>
-            </div>
+            <Link href="/" className="inline-block">
+              <Image
+                src="/logo.png"
+                alt="JejakLapak"
+                width={130}
+                height={32}
+                style={{ width: "auto" }}
+                className="h-7 object-contain"
+              />
+            </Link>
             <p className="text-xs text-[#3f4850] leading-relaxed">
               Infrastruktur pemetaan real-time pedagang UMKM keliling di koridor metropolitan Bandung Raya. Menghubungkan pembeli dengan gerobak terdekat secara presisi.
             </p>

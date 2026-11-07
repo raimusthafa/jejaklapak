@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -125,23 +126,22 @@ export function MerchantSidebar({
           <div className="p-4 border-b border-slate-100 flex items-center justify-between">
             <Link
               href="/merchant/dashboard"
-              className="flex items-center gap-2.5 group"
+              className="flex items-center gap-2 group"
               onClick={() => {
                 if (window.innerWidth < 1024) onClose();
               }}
             >
-              <div className="w-8 h-8 rounded-lg bg-[#006194] text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform">
-                <MapPin className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-sm text-slate-900">JejakLapak</span>
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-[#eff4ff] text-[#006194]">
-                    Mitra
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 font-medium">Area Pedagang</p>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="JejakLapak"
+                width={125}
+                height={32}
+                style={{ width: "auto" }}
+                className="h-7 object-contain transition-transform group-hover:scale-105"
+              />
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#eff4ff] text-[#006194]">
+                Mitra
+              </span>
             </Link>
 
             {/* Close Toggle Button (seperti sidebar kiri maps) */}

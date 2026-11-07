@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Store,
@@ -50,6 +51,18 @@ export default function MerchantRegisterPage() {
       <div className="w-full max-w-6xl rounded-3xl bg-[#dce9ff] p-6 lg:p-12 shadow-sm border border-[#bfc7d2]/40 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* Left Banner Info Column */}
         <div className="lg:col-span-5 flex flex-col items-start gap-5">
+          <Link href="/" className="inline-block transition-transform hover:scale-105">
+            <Image
+              src="/logo.png"
+              alt="JejakLapak"
+              width={160}
+              height={40}
+              style={{ width: "auto" }}
+              className="h-9 object-contain"
+              priority
+            />
+          </Link>
+
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#baeaff] text-[#001f29] text-xs font-semibold border border-[#79d8fd]">
             <Megaphone className="h-3.5 w-3.5 text-[#006781]" />
             Program Mitra Gerobak Bandung
