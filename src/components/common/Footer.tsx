@@ -28,61 +28,63 @@ export function Footer() {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#006194] text-white">
                 <MapPin className="h-4 w-4" />
               </div>
-              <span className="text-base font-bold text-slate-900">JejakLapak</span>
-              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-                v1.0 (Bandung Raya)
-              </span>
+              <span className="text-base font-bold text-[#0d1c2e]">JejakLapak</span>
             </div>
-            <p className="text-sm text-slate-600 max-w-md leading-relaxed">
-              Platform pelacak keberadaan pedagang UMKM keliling, pedagang kaki lima, dan gerobak kuliner berpindah di wilayah Bandung Raya.
-            </p>
-            <p className="text-xs text-slate-600">
-              Cakupan operasional: Kota Bandung, Kota Cimahi, Kab. Bandung, & Kab. Bandung Barat.
+            <p className="text-xs text-[#3f4850] leading-relaxed">
+              Infrastruktur pemetaan real-time pedagang UMKM keliling di koridor metropolitan Bandung Raya. Menghubungkan pembeli dengan gerobak terdekat secara presisi.
             </p>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h4 className="text-xs font-semibold text-slate-900 tracking-wider uppercase mb-3">
-              Navigasi
-            </h4>
-            <ul className="space-y-2 text-sm text-slate-600">
+            <h4 className="text-sm font-bold text-[#0d1c2e] mb-3">Navigasi Cepat</h4>
+            <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/explore" className="hover:text-emerald-700 flex items-center gap-1.5">
-                  <Compass className="h-3.5 w-3.5" /> Peta Eksplorasi
+                <Link className="text-[#3f4850] hover:text-[#006194] transition" href="/explore">
+                  Radar Lapak Aktif
                 </Link>
               </li>
               <li>
-                <Link href="/merchant/dashboard" className="hover:text-emerald-700 flex items-center gap-1.5">
-                  <Store className="h-3.5 w-3.5" /> Dashboard Pedagang
+                <Link className="text-[#3f4850] hover:text-[#006194] transition" href="/explore">
+                  Kategori Kuliner &amp; Jasa
                 </Link>
               </li>
               <li>
-                <Link href="/admin/dashboard" className="hover:text-emerald-700 flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5" /> Moderasi Admin
+                <Link className="text-[#3f4850] hover:text-[#006194] transition" href="/#cara-kerja">
+                  Panduan Pengguna (Cara Kerja)
+                </Link>
+              </li>
+              <li>
+                <Link className="text-[#3f4850] hover:text-[#006194] transition" href="/merchant/register">
+                  Registrasi Lapak Mandiri
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Map Attribution & Tech */}
           <div>
-            <h4 className="text-xs font-semibold text-slate-900 tracking-wider uppercase mb-3">
-              Lisensi & Peta
-            </h4>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Peta didukung oleh <strong>MapLibre GL JS</strong> (WebGL 60 FPS) dengan ubin data dari{" "}
-              <strong>OpenStreetMap contributors</strong> & <strong>Esri</strong>.
+            <h4 className="text-sm font-bold text-[#0d1c2e] mb-3">Koridor Wilayah</h4>
+            <ul className="space-y-2 text-xs text-[#3f4850]">
+              <li>Kota Bandung (Pusat, Dago &amp; Dipatiukur)</li>
+              <li>Bandung Wetan &amp; Cibiru</li>
+              <li>Cimahi &amp; Padalarang</li>
+              <li>Bandung Selatan &amp; Soreang</li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-sm font-bold text-[#0d1c2e] mb-3">Data &amp; Kemitraan</h4>
+            <p className="text-xs text-[#3f4850] mb-2 leading-relaxed">
+              Pemberdayaan ekonomi mikro melalui digitalisasi GPS terbuka dan geolokasi presisi.
             </p>
-            <p className="text-xs text-slate-600 mt-2">
-              100% Bebas API Key & Tanpa Watermark komersial.
-            </p>
+            <p className="text-xs font-semibold text-[#006194]">Kontak: halo@jejaklapak.id</p>
           </div>
         </div>
 
-        <div className="mt-8 border-t border-slate-100 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 gap-2">
-          <p>© 2026 JejakLapak. Know where they sell, know when they&apos;re there.</p>
-          <p className="text-slate-600">Fase Validasi Frontend v1.0</p>
+        <div className="border-t border-[#dce9ff] pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#3f4850]">
+          <div>© 2026 JejakLapak. Hak cipta dilindungi undang-undang.</div>
+          <div className="text-center md:text-right">
+            Didukung oleh MapLibre GL • Data Peta © OpenStreetMap contributors • ESRI Geographic Systems
+          </div>
         </div>
       </div>
     </footer>

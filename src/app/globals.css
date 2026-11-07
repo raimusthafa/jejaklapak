@@ -5,26 +5,104 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --color-primary: #006194;
+  --color-primary-container: #007bb9;
+  --color-primary-fixed: #cce5ff;
+  --color-primary-fixed-dim: #93ccff;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #fdfcff;
+  --color-on-primary-fixed: #001d31;
+  --color-on-primary-fixed-variant: #004b73;
+
+  --color-secondary: #006781;
+  --color-secondary-container: #79d8fd;
+  --color-secondary-fixed: #baeaff;
+  --color-secondary-fixed-dim: #73d2f7;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #005e77;
+  --color-on-secondary-fixed: #001f29;
+  --color-on-secondary-fixed-variant: #004d62;
+
+  --color-tertiary: #994100;
+  --color-tertiary-container: #c05400;
+  --color-tertiary-fixed: #ffdbca;
+  --color-tertiary-fixed-dim: #ffb690;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #fffbff;
+  --color-on-tertiary-fixed: #341100;
+  --color-on-tertiary-fixed-variant: #783200;
+
+  --color-surface: #f8f9ff;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-dim: #ccdbf3;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e6eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d5e3fc;
+  --color-surface-variant: #d5e3fc;
+
+  --color-background: #f8f9ff;
+  --color-on-background: #0d1c2e;
+  --color-on-surface: #0d1c2e;
+  --color-on-surface-variant: #3f4850;
+  --color-outline: #707881;
+  --color-outline-variant: #bfc7d2;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  --color-inverse-surface: #233144;
+  --color-inverse-on-surface: #eaf1ff;
+  --color-inverse-primary: #93ccff;
+
+  --spacing-space-xs: 0.25rem;
+  --spacing-space-sm: 0.5rem;
+  --spacing-space-md: 1rem;
+  --spacing-space-lg: 1.5rem;
+  --spacing-space-xl: 2rem;
+  --spacing-margin: 1rem;
+  --spacing-margin-desktop: 2rem;
+  --spacing-gutter: 1rem;
+  --spacing-gutter-desktop: 1.5rem;
+}
+
+@layer utilities {
+  .font-headline-xl { font-size: 40px; line-height: 48px; font-weight: 700; }
+  .font-headline-lg { font-size: 32px; line-height: 40px; font-weight: 700; }
+  .font-headline-md { font-size: 24px; line-height: 32px; font-weight: 600; }
+  .font-headline-sm { font-size: 20px; line-height: 28px; font-weight: 600; }
+  .font-body-lg { font-size: 16px; line-height: 24px; font-weight: 400; }
+  .font-body-md { font-size: 14px; line-height: 20px; font-weight: 400; }
+  .font-body-sm { font-size: 12px; line-height: 16px; font-weight: 400; }
+  .font-label-lg { font-size: 14px; line-height: 20px; font-weight: 600; }
+  .font-label-md { font-size: 12px; line-height: 16px; font-weight: 600; }
+  .font-label-sm { font-size: 11px; line-height: 14px; font-weight: 700; }
+}
+
 :root {
-  /* ── JejakLapak Design Tokens ── */
-  --background: #fcfdfc;
-  --foreground: #0f172a;
+  /* ── JejakLapak Minimal Blue Tokens ── */
+  --background: #f8f9ff;
+  --foreground: #0d1c2e;
 
-  /* Override shadcn primary → Deep Green JejakLapak */
-  --primary: oklch(0.448 0.141 155.2);       /* #15803d */
-  --primary-hover: oklch(0.413 0.138 155.2); /* #166534 */
-  --primary-light: #f0fdf4;
-  --primary-foreground: oklch(0.985 0 0);
+  /* Primary → Stitch Minimal Blue #006194 */
+  --primary: #006194;
+  --primary-hover: #004b73;
+  --primary-light: #eff4ff;
+  --primary-foreground: #ffffff;
 
-  /* Override shadcn accent → Warm Orange JejakLapak */
-  --accent: oklch(0.714 0.154 54.8);          /* #d97706 */
-  --accent-light: #fffbeb;
-  --accent-foreground: oklch(0.985 0 0);
+  /* Accent → Stitch Secondary #006781 */
+  --accent: #006781;
+  --accent-light: #eff4ff;
+  --accent-foreground: #ffffff;
 
   --surface: #ffffff;
-  --surface-subtle: #f8fafc;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --surface-subtle: #f8f9ff;
+  --border: #dce9ff;
+  --border-strong: #bfc7d2;
 
   --muted: oklch(0.97 0 0);
   --muted-light: #94a3b8;

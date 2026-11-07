@@ -16,6 +16,8 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  Megaphone,
+  Send,
 } from "lucide-react";
 import { CATEGORIES, BANDUNG_DISTRICTS } from "@/config/constants";
 import { registerMerchantAction, type ActionState } from "@/actions/auth";
@@ -45,269 +47,349 @@ export default function MerchantRegisterPage() {
   }, [state.ok, state.message, state.redirectTo, router]);
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#f4f8fb] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-xl space-y-6 bg-white p-8 rounded-2xl border border-slate-200/90 shadow-sm">
-        <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e6f6fc] text-[#0284c7]">
-            <Store className="h-6 w-6 text-[#0284c7]" />
-          </div>
-          <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-            Daftarkan Lapak Kelilingmu
-          </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Bantu pembeli di Bandung Raya menemukan keberadaan gerobakmu setiap hari.
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#f8f9ff] py-10 lg:py-16 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-6xl rounded-3xl bg-[#dce9ff] p-6 lg:p-12 shadow-sm border border-[#bfc7d2]/40 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+        {/* Left Banner Info Column */}
+        <div className="lg:col-span-5 flex flex-col items-start gap-5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#baeaff] text-[#001f29] text-xs font-semibold border border-[#79d8fd]">
+            <Megaphone className="h-3.5 w-3.5 text-[#006781]" />
+            Program Mitra Gerobak Bandung
+          </span>
+
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0d1c2e] leading-tight">
+            Punya Gerobak Keliling di Bandung? Daftarkan Lapak Anda Sekarang.
+          </h1>
+
+          <p className="text-sm sm:text-base text-[#3f4850] leading-relaxed">
+            Tingkatkan omzet harian dengan membagikan posisi Anda kepada ribuan penikmat kuliner di sekitar rute jalan Anda. Pendaftaran cepat hanya butuh nomor WhatsApp aktif.
           </p>
+
+          <div className="space-y-3 text-xs sm:text-sm text-[#3f4850] w-full">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-[#006781] shrink-0" />
+              <span>100% Gratis selamanya tanpa potongan transaksi</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-[#006781] shrink-0" />
+              <span>Tinggal nyalakan tombol pelacak di HP sederhana saat jualan</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="h-4 w-4 text-[#006781] shrink-0" />
+              <span>Diberikan stiker QR JejakLapak resmi untuk ditempel di gerobak</span>
+            </div>
+          </div>
+
+          <div className="w-full mt-4 p-4 rounded-2xl bg-white/70 border border-[#bfc7d2]/40 text-xs text-[#3f4850]">
+            Sudah memiliki akun lapak?{" "}
+            <Link href="/merchant/login" className="font-bold text-[#006194] hover:underline">
+              Masuk ke Sini
+            </Link>
+          </div>
         </div>
 
-        {/* Notifikasi error dari server */}
-        {state.message && !state.ok && (
-          <div className="flex items-start gap-3 rounded-xl bg-rose-50 border border-rose-200/90 p-3.5 text-xs text-rose-800 animate-in fade-in slide-in-from-top-1">
-            <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <p className="font-bold text-rose-900">Pendaftaran Belum Lengkap</p>
-              <p className="text-rose-700 leading-relaxed">{state.message}</p>
-            </div>
-          </div>
-        )}
-
-        {state.ok ? (
-          <div className="py-8 text-center space-y-3">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e6f6fc] text-[#0284c7]">
-              <CheckCircle2 className="h-8 w-8 text-[#0284c7]" />
-            </div>
-            <h3 className="text-lg font-bold text-slate-900">Registrasi Berhasil!</h3>
-            <p className="text-xs text-slate-600">
-              {state.message || "Selamat datang di JejakLapak. Mengarahkan Anda ke Halaman Masuk..."}
+        {/* Right Form Column */}
+        <div className="lg:col-span-7 w-full">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-[#bfc7d2]/40">
+            <h2 className="text-xl font-bold text-[#0d1c2e]">Form Pendaftaran Mitra Mandiri</h2>
+            <p className="text-xs text-[#3f4850] mt-1 mb-6">
+              Lengkapi data usaha Anda untuk langsung mulai membagikan lokasi di peta Bandung Raya.
             </p>
-          </div>
-        ) : (
-          <form action={formAction} className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nama Pemilik Usaha</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    name="name"
-                    required
-                    placeholder="Contoh: Mang Asep"
-                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
-                      state.errors?.name
-                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                    }`}
-                  />
+
+            {/* Error banner dari server */}
+            {state.message && !state.ok && (
+              <div className="mb-5 flex items-start gap-3 rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-800 animate-in fade-in">
+                <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <p className="font-bold text-rose-900">Pendaftaran Belum Lengkap</p>
+                  <p className="text-rose-700 leading-relaxed">{state.message}</p>
                 </div>
-                {state.errors?.name && (
-                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.name[0]}</p>
-                )}
               </div>
+            )}
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nama Lapak / Dagangan</label>
-                <div className="relative">
-                  <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    name="merchantName"
-                    required
-                    placeholder="Contoh: Cuanki Serayu Keliling"
-                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
-                      state.errors?.merchantName
-                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                    }`}
-                  />
+            {state.ok ? (
+              <div className="py-10 text-center space-y-3">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#eff4ff] text-[#006194]">
+                  <CheckCircle2 className="h-8 w-8 text-[#006194]" />
                 </div>
-                {state.errors?.merchantName && (
-                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.merchantName[0]}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Alamat Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    placeholder="nama@email.com"
-                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
-                      state.errors?.email
-                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                    }`}
-                  />
-                </div>
-                {state.errors?.email && (
-                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.email[0]}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Nomor WhatsApp</label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="tel"
-                    name="phone"
-                    required
-                    placeholder="081234567890"
-                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
-                      state.errors?.phone
-                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                    }`}
-                  />
-                </div>
-                {state.errors?.phone && (
-                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.phone[0]}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Kategori Jualan</label>
-                <select
-                  name="category"
-                  required
-                  defaultValue=""
-                  className={`w-full rounded-xl border px-3 py-2.5 text-slate-900 bg-white focus:outline-none focus:ring-1 transition ${
-                    state.errors?.category
-                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                      : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                  }`}
-                >
-                  <option value="" disabled>Pilih Kategori Kuliner</option>
-                  {CATEGORIES.filter((c) => c !== "Semua Kategori").map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-                {state.errors?.category && (
-                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.category[0]}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Kecamatan Basis</label>
-                <select
-                  name="district"
-                  required
-                  defaultValue=""
-                  className={`w-full rounded-xl border px-3 py-2.5 text-slate-900 bg-white focus:outline-none focus:ring-1 transition ${
-                    state.errors?.district
-                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                      : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                  }`}
-                >
-                  <option value="" disabled>Pilih Wilayah</option>
-                  {BANDUNG_DISTRICTS.filter((d) => d !== "Semua Wilayah").map((dist) => (
-                    <option key={dist} value={dist}>{dist}</option>
-                  ))}
-                </select>
-                {state.errors?.district && (
-                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.district[0]}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Alamat Pangkalan / Standby</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    name="address"
-                    required
-                    placeholder="Depan Kampus ITB Jl. Ganesha"
-                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
-                      state.errors?.address
-                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                    }`}
-                  />
-                </div>
-                {state.errors?.address && (
-                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.address[0]}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Rute Keliling</label>
-                <div className="relative">
-                  <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    name="operatingArea"
-                    required
-                    placeholder="Riau, Gandapura, Cisangkuy"
-                    className={`w-full rounded-xl border pl-9 pr-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
-                      state.errors?.operatingArea
-                        ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                        : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                    }`}
-                  />
-                </div>
-                {state.errors?.operatingArea && (
-                  <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.operatingArea[0]}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block font-semibold text-slate-700">Kata Sandi Akun</label>
-                <span className="text-[11px] text-slate-400">Minimal 6 karakter bebas</span>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  required
-                  placeholder="••••••••"
-                  className={`w-full rounded-xl border pl-9 pr-10 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition ${
-                    state.errors?.password
-                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500"
-                      : "border-slate-200 focus:border-[#0284c7] focus:ring-[#0284c7]"
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
-                  tabIndex={-1}
-                  aria-label={showPassword ? "Sembunyikan sandi" : "Lihat sandi"}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {state.errors?.password ? (
-                <p className="mt-1 text-[11px] text-rose-600 font-medium">{state.errors.password[0]}</p>
-              ) : (
-                <p className="mt-1 text-[11px] text-slate-400">
-                  Bisa menggunakan huruf, angka, atau simbol apa saja (tanpa syarat huruf besar/simbol khusus).
+                <h3 className="text-lg font-bold text-[#0d1c2e]">Registrasi Berhasil!</h3>
+                <p className="text-xs text-[#3f4850]">
+                  {state.message || "Selamat datang di JejakLapak. Mengarahkan Anda ke portal login..."}
                 </p>
-              )}
-            </div>
+              </div>
+            ) : (
+              <form action={formAction} className="space-y-4 text-xs">
+                {/* 1. Nama Pemilik & Nama Lapak */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-[#0d1c2e] mb-1">
+                      Nama Pemilik Usaha
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707881]" />
+                      <input
+                        type="text"
+                        name="name"
+                        required
+                        placeholder="Contoh: Mang Asep"
+                        className={`w-full rounded-lg bg-[#eff4ff] border pl-9 pr-3 py-2.5 text-xs sm:text-sm text-[#0d1c2e] placeholder:text-[#3f4850]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                          state.errors?.name
+                            ? "border-rose-400 focus:ring-rose-500"
+                            : "border-[#dce9ff]"
+                        }`}
+                      />
+                    </div>
+                    {state.errors?.name && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        {state.errors.name[0]}
+                      </p>
+                    )}
+                  </div>
 
-            <div className="flex items-start gap-2 pt-2">
-              <input
-                id="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 rounded border-slate-300 text-[#0284c7] focus:ring-[#0284c7] mt-0.5"
-              />
-              <label htmlFor="terms" className="text-slate-500 text-[11px] leading-tight">
-                Saya menyetujui bahwa informasi lokasi gerobak yang saya bagikan hanya akan digunakan untuk keperluan keterbukaan posisi bagi calon pelanggan di Bandung Raya.
-              </label>
-            </div>
+                  <div>
+                    <label className="block font-semibold text-[#0d1c2e] mb-1">
+                      Nama Lapak / Dagangan
+                    </label>
+                    <div className="relative">
+                      <Store className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707881]" />
+                      <input
+                        type="text"
+                        name="merchantName"
+                        required
+                        placeholder="Contoh: Cuanki Serayu Keliling"
+                        className={`w-full rounded-lg bg-[#eff4ff] border pl-9 pr-3 py-2.5 text-xs sm:text-sm text-[#0d1c2e] placeholder:text-[#3f4850]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                          state.errors?.merchantName
+                            ? "border-rose-400 focus:ring-rose-500"
+                            : "border-[#dce9ff]"
+                        }`}
+                      />
+                    </div>
+                    {state.errors?.merchantName && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        {state.errors.merchantName[0]}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Kategori & WhatsApp */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-[#0d1c2e] mb-1">
+                      Kategori Jualan
+                    </label>
+                    <select
+                      name="category"
+                      required
+                      defaultValue=""
+                      className={`w-full rounded-lg bg-[#eff4ff] border px-3 py-2.5 text-xs sm:text-sm text-[#0d1c2e] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                        state.errors?.category
+                          ? "border-rose-400 focus:ring-rose-500"
+                          : "border-[#dce9ff]"
+                      }`}
+                    >
+                      <option value="" disabled>
+                        Pilih Kategori Kuliner
+                      </option>
+                      {CATEGORIES.filter((c) => c !== "Semua Kategori").map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                    {state.errors?.category && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        {state.errors.category[0]}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#0d1c2e] mb-1">
+                      Nomor WhatsApp
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707881]" />
+                      <input
+                        type="tel"
+                        name="phone"
+                        required
+                        placeholder="08xxxxxxxxxx"
+                        className={`w-full rounded-lg bg-[#eff4ff] border pl-9 pr-3 py-2.5 text-xs sm:text-sm text-[#0d1c2e] placeholder:text-[#3f4850]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                          state.errors?.phone
+                            ? "border-rose-400 focus:ring-rose-500"
+                            : "border-[#dce9ff]"
+                        }`}
+                      />
+                    </div>
+                    {state.errors?.phone && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        {state.errors.phone[0]}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Kecamatan & Alamat Standby */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-[#0d1c2e] mb-1">
+                      Kecamatan Basis
+                    </label>
+                    <select
+                      name="district"
+                      required
+                      defaultValue=""
+                      className={`w-full rounded-lg bg-[#eff4ff] border px-3 py-2.5 text-xs sm:text-sm text-[#0d1c2e] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                        state.errors?.district
+                          ? "border-rose-400 focus:ring-rose-500"
+                          : "border-[#dce9ff]"
+                      }`}
+                    >
+                      <option value="" disabled>
+                        Pilih Wilayah
+                      </option>
+                      {BANDUNG_DISTRICTS.filter((d) => d !== "Semua Wilayah").map((dist) => (
+                        <option key={dist} value={dist}>
+                          {dist}
+                        </option>
+                      ))}
+                    </select>
+                    {state.errors?.district && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        {state.errors.district[0]}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#0d1c2e] mb-1">
+                      Alamat Pangkalan / Standby
+                    </label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707881]" />
+                      <input
+                        type="text"
+                        name="address"
+                        required
+                        placeholder="Depan Kampus ITB Jl. Ganesha"
+                        className={`w-full rounded-lg bg-[#eff4ff] border pl-9 pr-3 py-2.5 text-xs sm:text-sm text-[#0d1c2e] placeholder:text-[#3f4850]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                          state.errors?.address
+                            ? "border-rose-400 focus:ring-rose-500"
+                            : "border-[#dce9ff]"
+                        }`}
+                      />
+                    </div>
+                    {state.errors?.address && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        {state.errors.address[0]}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 4. Rute Keliling Utama */}
+                <div>
+                  <label className="block font-semibold text-[#0d1c2e] mb-1">
+                    Area / Rute Keliling Utama
+                  </label>
+                  <div className="relative">
+                    <Navigation className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707881]" />
+                    <input
+                      type="text"
+                      name="operatingArea"
+                      required
+                      placeholder="Contoh: Dago Atas, Simpang Dago, s/d Dipatiukur"
+                      className={`w-full rounded-lg bg-[#eff4ff] border pl-9 pr-3 py-2.5 text-xs sm:text-sm text-[#0d1c2e] placeholder:text-[#3f4850]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                        state.errors?.operatingArea
+                          ? "border-rose-400 focus:ring-rose-500"
+                          : "border-[#dce9ff]"
+                      }`}
+                    />
+                  </div>
+                  {state.errors?.operatingArea && (
+                    <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                      {state.errors.operatingArea[0]}
+                    </p>
+                  )}
+                </div>
+
+                {/* 5. Email & Password */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-semibold text-[#0d1c2e] mb-1">
+                      Alamat Email
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707881]" />
+                      <input
+                        type="email"
+                        name="email"
+                        required
+                        placeholder="lapak@gmail.com"
+                        className={`w-full rounded-lg bg-[#eff4ff] border pl-9 pr-3 py-2.5 text-xs sm:text-sm text-[#0d1c2e] placeholder:text-[#3f4850]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                          state.errors?.email
+                            ? "border-rose-400 focus:ring-rose-500"
+                            : "border-[#dce9ff]"
+                        }`}
+                      />
+                    </div>
+                    {state.errors?.email && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        {state.errors.email[0]}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-semibold text-[#0d1c2e]">
+                        Kata Sandi Akun
+                      </label>
+                      <span className="text-[11px] text-[#707881]">Min. 6 karakter</span>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#707881]" />
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="password"
+                        required
+                        placeholder="••••••••"
+                        className={`w-full rounded-lg bg-[#eff4ff] border pl-9 pr-10 py-2.5 text-xs sm:text-sm text-[#0d1c2e] placeholder:text-[#3f4850]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#006194] transition ${
+                          state.errors?.password
+                            ? "border-rose-400 focus:ring-rose-500"
+                            : "border-[#dce9ff]"
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#707881] hover:text-[#0d1c2e] transition"
+                        tabIndex={-1}
+                        aria-label={showPassword ? "Sembunyikan sandi" : "Lihat sandi"}
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {state.errors?.password && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        {state.errors.password[0]}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Terms */}
+                <div className="flex items-start gap-2 pt-1">
+                  <input
+                    id="terms"
+                    type="checkbox"
+                    required
+                    className="h-4 w-4 rounded border-[#bfc7d2] text-[#006194] focus:ring-[#006194] mt-0.5"
+                  />
+                  <label htmlFor="terms" className="text-[#3f4850] text-[11px] leading-tight">
+                    Saya menyetujui bahwa informasi lokasi gerobak yang saya bagikan hanya akan digunakan untuk keperluan keterbukaan posisi bagi calon pelanggan di Bandung Raya.
+                  </label>
+                </div>
 
             <button
               type="submit"
