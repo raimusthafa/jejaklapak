@@ -17,7 +17,6 @@ import {
   Eye,
   EyeOff,
   Megaphone,
-  Send,
 } from "lucide-react";
 import { CATEGORIES, BANDUNG_DISTRICTS } from "@/config/constants";
 import { registerMerchantAction, type ActionState } from "@/actions/auth";
@@ -410,9 +409,11 @@ export default function MerchantRegisterPage() {
 
         <div className="text-center pt-2 border-t border-slate-100 text-xs text-slate-500">
           Sudah memiliki akun?{" "}
-          <Link href="/merchant/login" className="font-bold text-[#0284c7] hover:underline">
+          <Link href="/merchant/login" className="font-bold text-[#006194] hover:underline">
             Masuk ke Sini
           </Link>
+        </div>
+          </div>
         </div>
       </div>
     </div>

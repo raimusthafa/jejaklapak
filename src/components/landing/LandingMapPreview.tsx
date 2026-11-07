@@ -4,7 +4,6 @@ import { useEffect, useRef, useCallback } from "react";
 import * as maplibregl from "maplibre-gl";
 import { setWorkerUrl } from "maplibre-gl";
 import { BASEMAPS, DEFAULT_BASEMAP } from "@/config/basemaps";
-import { BANDUNG_CENTER } from "@/config/constants";
 
 // Set worker URL once at module load time (client-side only)
 if (typeof window !== "undefined") {

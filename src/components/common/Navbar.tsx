@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   MapPin,
-  Store,
   Compass,
   LogOut,
 } from "lucide-react";

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MapPin, Compass, Store, ShieldCheck } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 export function Footer() {
   const pathname = usePathname();
