@@ -10,32 +10,24 @@ import {
   Navigation,
   Calendar,
   ExternalLink,
-  BellRing,
-  Star,
   CheckCircle2,
-  Gauge,
-  Compass,
 } from "lucide-react";
 
 interface VendorDetailContentProps {
   merchant: Merchant;
   onClose: () => void;
-  onCallVendor: (merchant: Merchant) => void;
-  followCamera: boolean;
-  onToggleFollowCamera: () => void;
+  onCallVendor?: (merchant: Merchant) => void;
+  followCamera?: boolean;
+  onToggleFollowCamera?: () => void;
   userDistanceMeters?: number;
 }
 
 export function VendorDetailContent({
   merchant,
   onClose,
-  onCallVendor,
-  followCamera,
-  onToggleFollowCamera,
   userDistanceMeters = 120,
 }: VendorDetailContentProps) {
   const freshness = calculateFreshness(merchant.location.capturedAt);
-  const isMoving = (merchant.location.speedKmh ?? 0) > 1;
   const isLive = merchant.sellingStatus === "ACTIVE";
 
   const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${merchant.location.latitude},${merchant.location.longitude}`;
@@ -52,14 +44,18 @@ export function VendorDetailContent({
       ? `Rp ${(minPrice / 1000).toFixed(0)}k`
       : `${(minPrice / 1000).toFixed(0)}k-${(maxPrice / 1000).toFixed(0)}k`;
 
-  // Total estimated portions
-  const totalPortions = Math.max(18, merchant.menu.length * 12);
-
   // Formatted distance display
   const distanceText =
     userDistanceMeters < 1000
       ? `${userDistanceMeters}m Dari Anda`
       : `${(userDistanceMeters / 1000).toFixed(1)}km Dari Anda`;
+
+  // Real schedule formatting from database
+  const activeSchedules = merchant.schedule?.filter((s) => s.isOpen) || [];
+  const scheduleText =
+    activeSchedules.length > 0
+      ? `${activeSchedules[0].dayName} - ${activeSchedules[activeSchedules.length - 1].dayName} (${activeSchedules[0].startTime} - ${activeSchedules[0].endTime} WIB)`
+      : null;
 
   // Tracker Code
   const cleanId = merchant.id.replace(/[^a-zA-Z0-9]/g, "").slice(-4).toUpperCase();
@@ -73,7 +69,7 @@ export function VendorDetailContent({
           {isLive ? (
             <span className="px-2 py-0.5 rounded-full bg-[#baeaff] text-[#001f29] text-[11px] font-bold flex items-center gap-1 tracking-wide">
               <span className="w-1.5 h-1.5 rounded-full bg-[#006781] animate-ping" />
-              {isMoving ? "LIVE BERGERAK" : "LIVE MANGKAL"}
+              LIVE JUALAN
             </span>
           ) : (
             <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold tracking-wide">
@@ -131,18 +127,13 @@ export function VendorDetailContent({
               {merchant.tagline || merchant.description}
             </p>
 
-            <div className="flex items-center gap-2.5 mt-2 text-xs">
+            <div className="flex items-center gap-2 mt-2 text-xs">
               <span className="font-bold text-[#006781] flex items-center gap-1">
                 <Navigation className="h-3.5 w-3.5 rotate-45" />
                 {distanceText}
               </span>
               <span className="text-slate-300">•</span>
-              <span className="flex items-center gap-1 text-slate-700 font-medium">
-                <Gauge className="h-3.5 w-3.5 text-slate-400" />
-                {isMoving
-                  ? `${merchant.location.speedKmh?.toFixed(1) || "3.5"} km/j (Mendorong)`
-                  : "Mangkal di Lokasi"}
-              </span>
+              <span className="text-slate-600 font-medium">{merchant.category}</span>
             </div>
           </div>
         </div>
@@ -163,85 +154,66 @@ export function VendorDetailContent({
           </div>
         </div>
 
-        {/* 3 Quick Metrics Bento Strip */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="p-2.5 rounded-lg bg-[#eff4ff] text-center flex flex-col items-center justify-center border border-[#d5e3fc]/60">
-            <span className="font-bold text-base text-[#006194] leading-tight">
-              {totalPortions}
-            </span>
-            <span className="text-[10px] text-slate-500 font-medium mt-0.5">
-              Porsi Siap Saji
-            </span>
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-[#eff4ff] text-center flex flex-col items-center justify-center border border-[#d5e3fc]/60">
-            <div className="flex items-center gap-0.5 text-[#994100] font-bold text-base leading-tight">
-              <span>4.8</span>
-              <Star className="h-3.5 w-3.5 fill-[#994100]" />
-            </div>
-            <span className="text-[10px] text-slate-500 font-medium mt-0.5">
-              120+ Ulasan
-            </span>
-          </div>
-
+        {/* Real Metrics Strip (Harga & Status Lapak Aktual) */}
+        <div className="grid grid-cols-2 gap-2">
           <div className="p-2.5 rounded-lg bg-[#eff4ff] text-center flex flex-col items-center justify-center border border-[#d5e3fc]/60">
             <span className="font-bold text-xs sm:text-sm text-slate-900 leading-tight">
               {priceDisplay}
             </span>
             <span className="text-[10px] text-slate-500 font-medium mt-0.5">
-              Ramah Kantong
+              Kisaran Harga
+            </span>
+          </div>
+
+          <div className="p-2.5 rounded-lg bg-[#eff4ff] text-center flex flex-col items-center justify-center border border-[#d5e3fc]/60">
+            <span className="font-bold text-xs sm:text-sm text-[#006781] leading-tight">
+              {merchant.sellingStatus === "ACTIVE"
+                ? "Sedang Jualan"
+                : merchant.sellingStatus === "PAUSED"
+                ? "Istirahat"
+                : "Tutup"}
+            </span>
+            <span className="text-[10px] text-slate-500 font-medium mt-0.5">
+              Status Lapak
             </span>
           </div>
         </div>
 
-        {/* 3 Quick Action Interactive Buttons */}
-        <div className="grid grid-cols-3 gap-2">
+        {/* 2 Quick Action Interactive Buttons (Arahkan & WhatsApp) */}
+        <div className="grid grid-cols-2 gap-2.5">
           {/* Arahkan */}
           <a
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="py-2 px-1 rounded-lg bg-[#006194] text-white flex flex-col items-center justify-center gap-1 shadow-xs hover:bg-[#007bb9] transition-all text-center"
+            className="py-2.5 px-3 rounded-xl bg-[#006194] text-white flex items-center justify-center gap-2 shadow-xs hover:bg-[#007bb9] transition-all text-center"
           >
             <Navigation className="h-4 w-4" />
-            <span className="text-[11px] font-bold">Arahkan</span>
+            <span className="text-xs font-bold">Arahkan Rute</span>
           </a>
-
-          {/* Panggil */}
-          <button
-            type="button"
-            onClick={() => onCallVendor(merchant)}
-            className="py-2 px-1 rounded-lg bg-[#eff4ff] text-[#0d1c2e] flex flex-col items-center justify-center gap-1 hover:bg-[#dce9ff] transition-all border border-[#d5e3fc]"
-          >
-            <BellRing className="h-4 w-4 text-[#006781]" />
-            <span className="text-[11px] font-bold">Panggil</span>
-          </button>
 
           {/* WhatsApp */}
           <a
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="py-2 px-1 rounded-lg bg-[#eff4ff] text-[#0d1c2e] flex flex-col items-center justify-center gap-1 hover:bg-[#dce9ff] transition-all border border-[#d5e3fc]"
+            className="py-2.5 px-3 rounded-xl bg-[#eff4ff] text-[#0d1c2e] flex items-center justify-center gap-2 hover:bg-[#dce9ff] transition-all border border-[#d5e3fc] text-center"
           >
-            <MessageCircle className="h-4 w-4 text-[#994100]" />
-            <span className="text-[11px] font-bold">WhatsApp</span>
+            <MessageCircle className="h-4 w-4 text-[#006781]" />
+            <span className="text-xs font-bold">Chat WhatsApp</span>
           </a>
         </div>
 
-        {/* Camera Follow Toggle */}
+        {/* Mode Kunci Kamera dinonaktifkan sesuai permintaan pengguna */}
+        {/*
         <button
           type="button"
           onClick={onToggleFollowCamera}
-          className={`w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold border transition ${
-            followCamera
-              ? "bg-[#ffdbca]/70 text-[#994100] border-[#ffb690]"
-              : "bg-[#eff4ff] text-[#006194] border-[#d5e3fc] hover:bg-[#dce9ff]"
-          }`}
+          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-semibold border"
         >
-          <Compass className="h-3.5 w-3.5" />
-          <span>{followCamera ? "Mode Kunci Kamera Aktif" : "Kunci Kamera ke Gerobak Ini"}</span>
+          <span>Kunci Kamera ke Gerobak</span>
         </button>
+        */}
 
         {/* Menu Favorit List */}
         <div className="space-y-2">
@@ -255,7 +227,7 @@ export function VendorDetailContent({
           </div>
 
           <div className="space-y-1.5">
-            {merchant.menu.map((item, idx) => (
+            {merchant.menu.map((item) => (
               <div
                 key={item.id}
                 className="p-2.5 rounded-lg bg-[#eff4ff] flex items-center justify-between border border-[#d5e3fc]/50"
@@ -275,8 +247,12 @@ export function VendorDetailContent({
                   <div className="font-bold text-xs text-[#006194]">
                     Rp {item.price.toLocaleString("id-ID")}
                   </div>
-                  <div className="text-[10px] text-slate-400">
-                    Sisa {Math.max(10, 25 - idx * 6)}
+                  <div className="text-[10px] font-semibold">
+                    {item.isAvailable === false ? (
+                      <span className="text-red-500">Habis</span>
+                    ) : (
+                      <span className="text-emerald-600">Tersedia</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -288,11 +264,18 @@ export function VendorDetailContent({
         <div className="p-3 rounded-xl bg-[#eff4ff] space-y-1.5 border border-[#d5e3fc]">
           <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-[#006194]" />
-            Rutinitas {merchant.ownerName}
+            Rutinitas &amp; Jadwal {merchant.ownerName}
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            Berjualan rutin setiap hari operasional di area{" "}
-            <strong>{merchant.operatingArea || merchant.location.addressHint}</strong>. Jam operasional pukul 09:00 - 18:00 WIB.
+            {scheduleText ? (
+              <>
+                Jadwal operasional mingguan: <strong>{scheduleText}</strong>.{" "}
+              </>
+            ) : (
+              <>Jadwal harian mengikuti jam buka pedagang.{" "}</>
+            )}
+            Wilayah pangkalan/keliling:{" "}
+            <strong>{merchant.operatingArea || merchant.location.addressHint}</strong>.
           </p>
         </div>
       </div>

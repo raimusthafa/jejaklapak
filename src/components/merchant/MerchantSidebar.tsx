@@ -130,13 +130,13 @@ export function MerchantSidebar({
                 if (window.innerWidth < 1024) onClose();
               }}
             >
-              <div className="w-8 h-8 rounded-lg bg-[#60C1E5] text-slate-900 flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform">
-                <MapPin className="h-4 w-4 text-slate-900" />
+              <div className="w-8 h-8 rounded-lg bg-[#006194] text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform">
+                <MapPin className="h-4 w-4 text-white" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-sm text-slate-900">JejakLapak</span>
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-[#e6f6fc] text-[#0284c7]">
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-[#eff4ff] text-[#006194]">
                     Mitra
                   </span>
                 </div>
@@ -144,7 +144,7 @@ export function MerchantSidebar({
               </div>
             </Link>
 
-            {/* Close Toggle Button */}
+            {/* Close Toggle Button (seperti sidebar kiri maps) */}
             <button
               type="button"
               onClick={onClose}
@@ -271,7 +271,7 @@ export function MerchantSidebar({
           {/* 4. Footer User Info & Logout */}
           <div className="p-3 border-t border-slate-100 bg-slate-50/70 space-y-2">
             <div className="flex items-center gap-2.5 px-2 py-1">
-              <div className="w-8 h-8 rounded-xl bg-[#60C1E5] text-slate-900 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-[#006194] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
                 {(user?.name || merchantName).charAt(0)}
               </div>
               <div className="min-w-0 flex-1">

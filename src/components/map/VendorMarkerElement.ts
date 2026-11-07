@@ -81,15 +81,15 @@ export function createVendorMarkerElement(
     const statusBadge = document.createElement("span");
     statusBadge.className = "text-[10px] text-[#006781] font-bold flex items-center gap-1";
     statusBadge.innerHTML = `
-      <span class="w-1.5 h-1.5 rounded-full bg-[#006781] animate-pulse"></span> GEROBAK AKTIF • 120m
+      <span class="w-1.5 h-1.5 rounded-full ${isLive ? "bg-[#006781] animate-pulse" : "bg-slate-400"}"></span> ${isLive ? "GEROBAK AKTIF" : merchant.sellingStatus === "PAUSED" ? "ISTIRAHAT" : "TUTUP"}
     `;
 
     const rightGroup = document.createElement("div");
     rightGroup.className = "flex items-center gap-1.5";
 
-    const portionBadge = document.createElement("span");
-    portionBadge.className = "text-[10px] font-semibold bg-[#eff4ff] text-[#006194] px-1.5 py-0.5 rounded";
-    portionBadge.innerText = "Sisa 35";
+    const categoryBadge = document.createElement("span");
+    categoryBadge.className = "text-[10px] font-semibold bg-[#eff4ff] text-[#006194] px-1.5 py-0.5 rounded truncate max-w-[90px]";
+    categoryBadge.innerText = merchant.category;
 
     // Tombol X untuk membatalkan pilihan / tutup tooltip
     const closeBtn = document.createElement("button");
@@ -105,7 +105,7 @@ export function createVendorMarkerElement(
       }
     });
 
-    rightGroup.appendChild(portionBadge);
+    rightGroup.appendChild(categoryBadge);
     rightGroup.appendChild(closeBtn);
 
     headerRow.appendChild(statusBadge);

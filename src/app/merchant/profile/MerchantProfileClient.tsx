@@ -7,7 +7,7 @@ import { Merchant } from "@/types/merchant";
 import { updateMerchantProfileAction } from "@/actions/merchant";
 import { MerchantCategory } from "@/types/merchant";
 import { CATEGORIES, BANDUNG_DISTRICTS } from "@/config/constants";
-import { ArrowLeft, Save, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ArrowLeft, Save, PanelLeft } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
 import { toast } from "@/components/ui/sonner";
@@ -111,22 +111,21 @@ export default function MerchantProfileClient({
       <div className="flex-1 flex flex-col min-w-0 pb-16">
         <div className="bg-white border-b border-slate-200">
           <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsSidebarOpen((prev) => !prev)}
-              title={isSidebarOpen ? "Tutup Sidebar Navigasi" : "Buka Sidebar Navigasi"}
-              className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors shrink-0 cursor-pointer"
-            >
-              {isSidebarOpen ? (
-                <PanelLeftClose className="h-5 w-5" />
-              ) : (
-                <PanelLeftOpen className="h-5 w-5" />
-              )}
-            </button>
+            {!isSidebarOpen && (
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(true)}
+                title="Buka Menu Sidebar"
+                className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl shadow-xs border border-slate-200 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#006194] transition-colors cursor-pointer shrink-0"
+              >
+                <PanelLeft className="h-4 w-4 text-[#006194]" />
+                <span className="hidden sm:inline">Menu Sidebar</span>
+              </button>
+            )}
 
             <Link
               href="/merchant/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#0284c7] transition"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#006194] transition"
             >
               <ArrowLeft className="h-4 w-4" /> Kembali ke Dashboard Pedagang
             </Link>
@@ -298,7 +297,7 @@ export default function MerchantProfileClient({
             <button
               type="submit"
               disabled={isPending}
-              className="flex items-center gap-2 rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] px-5 py-2.5 text-xs font-bold text-slate-900 shadow-sm transition disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-[#006194] hover:bg-[#004d77] px-5 py-2.5 text-xs font-bold text-white shadow-sm transition disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
               {isPending ? "Menyimpan ke Server..." : "Simpan Perubahan Profil"}

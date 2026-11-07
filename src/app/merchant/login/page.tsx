@@ -156,17 +156,17 @@ function LoginForm() {
         <button
           type="submit"
           disabled={isPending || state.ok}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] py-3 text-xs font-bold text-slate-900 shadow-sm transition-all disabled:opacity-50 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#006194] hover:bg-[#004d77] py-3 text-xs font-bold text-white shadow-sm transition-all disabled:opacity-50 cursor-pointer"
         >
           {isPending ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin text-slate-900" />
+              <Loader2 className="h-4 w-4 animate-spin text-white" />
               <span>Memverifikasi Akun...</span>
             </>
           ) : (
             <>
               <span>Masuk ke Akun</span>
-              <ArrowRight className="h-4 w-4 text-slate-900" />
+              <ArrowRight className="h-4 w-4 text-white" />
             </>
           )}
         </button>

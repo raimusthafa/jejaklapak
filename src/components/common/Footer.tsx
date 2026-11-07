@@ -25,7 +25,7 @@ export function Footer() {
           {/* Brand & mission */}
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-700 text-white">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#006194] text-white">
                 <MapPin className="h-4 w-4" />
               </div>
               <span className="text-base font-bold text-slate-900">JejakLapak</span>

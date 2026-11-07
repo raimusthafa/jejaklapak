@@ -9,21 +9,19 @@ import { useMerchantLocationTracker } from "@/hooks/useMerchantLocationTracker";
 import { Merchant, SellingStatus } from "@/types/merchant";
 import MaplibreView from "@/components/map/MaplibreView";
 import {
-  Play,
   Pause,
   MapPin,
   Store,
   CheckCircle2,
   Navigation,
-  Eye,
-  Bell,
   RefreshCw,
   UtensilsCrossed,
-  TrendingUp,
   Power,
   X,
-  PanelLeftClose,
-  PanelLeftOpen,
+  PanelLeft,
+  ChevronDown,
+  Share2,
+  ExternalLink,
 } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
@@ -41,32 +39,13 @@ export default function MerchantDashboardClient({
   const [status, setStatus] = useState<SellingStatus>(defaultMerchant.sellingStatus);
   const [lastCapturedAt, setLastCapturedAt] = useState(defaultMerchant.location.capturedAt);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
   const [manualLat, setManualLat] = useState(defaultMerchant.location.latitude.toString());
   const [manualLng, setManualLng] = useState(defaultMerchant.location.longitude.toString());
   const [isPending, setIsPending] = useState(false);
   const [isRefreshingGps, setIsRefreshingGps] = useState(false);
-
-  // Mock incoming customer calls
-  const [incomingCalls, setIncomingCalls] = useState([
-    {
-      id: "call-1",
-      name: "Rian Nugraha",
-      distance: "±70 meter",
-      time: "11:42",
-      notes: "Mang mampir ke depan Kantor Pos ya, pesan 3 porsi",
-      status: "PENDING" as "PENDING" | "ACCEPTED" | "COMPLETED",
-    },
-    {
-      id: "call-2",
-      name: "Siti Maryam",
-      distance: "±120 meter",
-      time: "11:15",
-      notes: "Batagor kuah 2 porsi jangan pedas ya kang",
-      status: "COMPLETED" as "PENDING" | "ACCEPTED" | "COMPLETED",
-    },
-  ]);
 
   // Sync merchant with live database on mount
   useEffect(() => {
@@ -127,37 +106,28 @@ export default function MerchantDashboardClient({
     }
   };
 
-  const handleToggleStatus = async () => {
-    if (status === "ACTIVE") {
+  const handleSelectStatus = async (targetStatus: SellingStatus) => {
+    setShowStatusDropdown(false);
+    if (targetStatus === status) return;
+
+    if (targetStatus === "ENDED") {
       setShowEndModal(true);
-    } else {
-      setIsPending(true);
-      const res = await toggleSellingSessionAction(merchant.id, "START");
-      setIsPending(false);
-
-      if (res.ok) {
-        setStatus("ACTIVE");
-        const nowIso = new Date().toISOString();
-        setLastCapturedAt(nowIso);
-        merchantService.updateSessionStatus(merchant.id, "ACTIVE");
-        showToast("Siaran aktif! Lapak Anda sekarang terlihat oleh pembeli di peta.");
-      }
+      return;
     }
-  };
 
-  const handleToggleJeda = async () => {
     setIsPending(true);
-    if (status === "PAUSED") {
-      const res = await toggleSellingSessionAction(merchant.id, "RESUME");
+    if (targetStatus === "ACTIVE") {
+      const actionType = status === "PAUSED" ? "RESUME" : "START";
+      const res = await toggleSellingSessionAction(merchant.id, actionType);
       setIsPending(false);
       if (res.ok) {
         setStatus("ACTIVE");
         const nowIso = new Date().toISOString();
         setLastCapturedAt(nowIso);
         merchantService.updateSessionStatus(merchant.id, "ACTIVE");
-        showToast("Lapak aktif kembali berjualan!");
+        showToast("Status berhasil diubah: Sedang Berjualan (Lokasi memancar di peta)");
       }
-    } else {
+    } else if (targetStatus === "PAUSED") {
       const res = await toggleSellingSessionAction(merchant.id, "PAUSE");
       setIsPending(false);
       if (res.ok) {
@@ -165,7 +135,7 @@ export default function MerchantDashboardClient({
         const nowIso = new Date().toISOString();
         setLastCapturedAt(nowIso);
         merchantService.updateSessionStatus(merchant.id, "PAUSED");
-        showToast("Status berubah: Sedang Istirahat / Sholat.");
+        showToast("Status berhasil diubah: Sedang Istirahat");
       }
     }
   };
@@ -181,7 +151,7 @@ export default function MerchantDashboardClient({
       setLastCapturedAt(nowIso);
       merchantService.updateSessionStatus(merchant.id, "ENDED");
       setShowEndModal(false);
-      showToast("Lapak ditutup. Sampai jumpa besok!");
+      showToast("Status berhasil diubah: Tidak Aktif (Sesi jualan ditutup)");
     }
   };
 
@@ -223,20 +193,6 @@ export default function MerchantDashboardClient({
     }
   };
 
-  const handleRespondCall = (callId: string) => {
-    setIncomingCalls((prev) =>
-      prev.map((c) => (c.id === callId ? { ...c, status: "ACCEPTED" } : c))
-    );
-    showToast("Pesan terkirim ke pembeli: Anda sedang menuju ke lokasi!");
-  };
-
-  const handleCompleteCall = (callId: string) => {
-    setIncomingCalls((prev) =>
-      prev.map((c) => (c.id === callId ? { ...c, status: "COMPLETED" } : c))
-    );
-    showToast("Panggilan telah ditandai selesai.");
-  };
-
   const codeTracker = `BDG-${merchant.id.substring(merchant.id.length - 4).toUpperCase()}`;
 
   return (
@@ -255,138 +211,135 @@ export default function MerchantDashboardClient({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 pb-20">
-        {/* 1. Top Header Pedagang (Stitch Design) */}
-        <header className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-30 px-4 sm:px-8 py-3.5 shadow-xs">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* Identity & Status Indicator */}
+        {/* 1. Top Header Pedagang */}
+        <header className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-30 px-4 sm:px-8 py-3 shadow-xs">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            {/* Sisi Kiri: Tombol Buka Sidebar (muncul HANYA ketika sidebar tertutup, tiru maps) */}
             <div className="flex items-center gap-3">
-              {/* Toggle Sidebar Button */}
-              <button
-                type="button"
-                onClick={() => setIsSidebarOpen((prev) => !prev)}
-                title={isSidebarOpen ? "Tutup Sidebar Navigasi" : "Buka Sidebar Navigasi"}
-                className="p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
-              >
-                {isSidebarOpen ? (
-                  <PanelLeftClose className="h-5 w-5 text-slate-600" />
-                ) : (
-                  <>
-                    <PanelLeftOpen className="h-5 w-5 text-slate-600" />
-                    <span className="text-xs font-bold hidden sm:inline text-slate-700">Menu</span>
-                  </>
-                )}
-              </button>
-
-              <div className="relative flex items-center justify-center">
-              {status === "ACTIVE" ? (
-                <>
-                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 block animate-ping absolute -top-0.5 -right-0.5"></span>
-                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 block"></span>
-                </>
-              ) : status === "PAUSED" ? (
-                <span className="w-3.5 h-3.5 rounded-full bg-amber-500 block"></span>
-              ) : (
-                <span className="w-3.5 h-3.5 rounded-full bg-slate-400 block"></span>
+              {!isSidebarOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(true)}
+                  title="Buka Menu Sidebar"
+                  className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl shadow-xs border border-slate-200 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#006194] transition-colors cursor-pointer"
+                >
+                  <PanelLeft className="h-4 w-4 text-[#006194]" />
+                  <span>Menu Sidebar</span>
+                </button>
               )}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
-                  {merchant.name}
-                </h1>
-                <span className="text-xl">{merchant.iconEmoji || "🍲"}</span>
-              </div>
-              <p className="text-xs font-semibold text-slate-500">
-                ID Lapak: <span className="font-bold text-slate-700">#{codeTracker}</span> • {merchant.category} • Gerobak Keliling
-              </p>
-            </div>
-          </div>
 
-          {/* Quick Action Controls */}
-          <div className="flex items-center flex-wrap gap-2.5">
-            {/* Main Toggle Siaran Button */}
-            <button
-              type="button"
-              onClick={handleToggleStatus}
-              disabled={isPending}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all disabled:opacity-50 ${
-                status === "ACTIVE"
-                  ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                  : "bg-[#60C1E5] hover:bg-[#4eb3d8] text-slate-900"
-              }`}
-            >
-              {status === "ACTIVE" ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>Aktif Berjualan</span>
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 fill-slate-900" />
-                  <span>Mulai Berjualan</span>
-                </>
-              )}
-            </button>
-
-            {/* Jeda Button */}
-            {status !== "ENDED" && (
+            {/* Sisi Kanan: Single Status Dropdown (Ramah Layar HP / Mobile Friendly) */}
+            <div className="relative">
               <button
                 type="button"
-                onClick={handleToggleJeda}
+                onClick={() => setShowStatusDropdown((prev) => !prev)}
                 disabled={isPending}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-semibold text-xs sm:text-sm transition-all disabled:opacity-50 ${
-                  status === "PAUSED"
-                    ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200"
-                    : "bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200"
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
+                  status === "ACTIVE"
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    : status === "PAUSED"
+                    ? "bg-amber-500 hover:bg-amber-600 text-white"
+                    : "bg-slate-700 hover:bg-slate-800 text-white"
                 }`}
               >
-                {status === "PAUSED" ? (
+                {status === "ACTIVE" ? (
                   <>
-                    <Play className="h-4 w-4" />
-                    <span>Lanjutkan Jualan</span>
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    <span>Sedang Berjualan</span>
+                  </>
+                ) : status === "PAUSED" ? (
+                  <>
+                    <Pause className="h-3 w-3" />
+                    <span>Sedang Istirahat</span>
                   </>
                 ) : (
                   <>
-                    <Pause className="h-4 w-4" />
-                    <span>Jeda Istirahat</span>
+                    <Power className="h-3 w-3" />
+                    <span>Tidak Aktif</span>
                   </>
                 )}
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${
+                    showStatusDropdown ? "rotate-180" : ""
+                  }`}
+                />
               </button>
-            )}
 
-            {/* Tutup Lapak Button */}
-            {status !== "ENDED" && (
-              <button
-                type="button"
-                onClick={() => setShowEndModal(true)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs sm:text-sm transition-all"
-              >
-                <Power className="h-4 w-4" />
-                <span>Tutup Lapak</span>
-              </button>
-            )}
+              {/* Status Dropdown Menu Card */}
+              {showStatusDropdown && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setShowStatusDropdown(false)}
+                  />
+                  <div className="absolute right-0 top-[calc(100%+8px)] w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-40 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 mb-1">
+                      Pilih Status Jualan Anda
+                    </div>
 
-            <div className="h-7 w-[1px] bg-slate-200 mx-1 hidden sm:block"></div>
+                    {/* Opsi 1: Sedang Berjualan */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectStatus("ACTIVE")}
+                      className={`w-full text-left p-2.5 rounded-xl text-xs transition-colors flex items-start gap-2.5 cursor-pointer ${
+                        status === "ACTIVE"
+                          ? "bg-emerald-50 text-emerald-950 border border-emerald-200 font-bold"
+                          : "hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1 shrink-0 animate-pulse" />
+                      <div>
+                        <div className="font-bold text-slate-900">Sedang Berjualan</div>
+                        <p className="text-[11px] text-slate-500 font-normal leading-tight mt-0.5">
+                          Lokasi gerobak memancar live ke calon pembeli di peta
+                        </p>
+                      </div>
+                    </button>
 
-            {/* Owner Profile Link */}
-            <Link
-              href="/merchant/profile"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition"
-              title="Edit Profil Lapak"
-            >
-              <div className="w-8 h-8 rounded-full bg-[#60C1E5] flex items-center justify-center font-bold text-slate-900 text-xs">
-                {(user?.name || merchant.ownerName).charAt(0)}
-              </div>
-              <div className="flex flex-col text-left hidden lg:flex">
-                <span className="font-bold text-xs text-slate-800 line-clamp-1">
-                  {user?.name || merchant.ownerName}
-                </span>
-                <span className="text-[10px] text-[#0284c7] font-semibold">Pengaturan Profil →</span>
-              </div>
-            </Link>
+                    {/* Opsi 2: Sedang Istirahat */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectStatus("PAUSED")}
+                      className={`w-full text-left p-2.5 rounded-xl text-xs transition-colors flex items-start gap-2.5 cursor-pointer ${
+                        status === "PAUSED"
+                          ? "bg-amber-50 text-amber-950 border border-amber-200 font-bold"
+                          : "hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <Pause className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="font-bold text-slate-900">Sedang Istirahat</div>
+                        <p className="text-[11px] text-slate-500 font-normal leading-tight mt-0.5">
+                          Jeda makan / ibadah sejenak, pembeli tahu lapak sedang jeda
+                        </p>
+                      </div>
+                    </button>
+
+                    {/* Opsi 3: Tidak Aktif */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectStatus("ENDED")}
+                      className={`w-full text-left p-2.5 rounded-xl text-xs transition-colors flex items-start gap-2.5 cursor-pointer ${
+                        status === "ENDED"
+                          ? "bg-slate-100 text-slate-900 border border-slate-300 font-bold"
+                          : "hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <Power className="h-3.5 w-3.5 text-slate-500 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="font-bold text-slate-900">Tidak Aktif</div>
+                        <p className="text-[11px] text-slate-500 font-normal leading-tight mt-0.5">
+                          Tutup jualan hari ini dan matikan siaran lokasi di peta
+                        </p>
+                      </div>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* 2. Main Container */}
       <main className="p-4 sm:p-8 max-w-7xl mx-auto space-y-6">
@@ -422,42 +375,44 @@ export default function MerchantDashboardClient({
             </div>
           </div>
 
-          {/* Card 2: Pembeli Melihat Lapak Hari Ini */}
+          {/* Card 2: Wilayah Operasional Terdaftar */}
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-start justify-between">
             <div className="space-y-1">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Melihat Lapak Hari Ini
+                Wilayah Operasional
               </span>
-              <div className="text-2xl font-black text-slate-900 leading-none">
-                24 <span className="text-sm font-semibold text-slate-500">Warga</span>
+              <div className="text-lg font-bold text-slate-900 leading-snug line-clamp-1">
+                {merchant.operatingArea || merchant.district || "Kota Bandung"}
               </div>
-              <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                <TrendingUp className="h-3.5 w-3.5" /> Ramai di radius 500 meter
+              <p className="text-xs text-slate-500 font-medium">
+                Kecamatan {merchant.district || "Bandung Wetan"}
               </p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0">
-              <Eye className="h-5 w-5" />
+            <div className="w-11 h-11 rounded-xl bg-sky-50 text-[#006194] flex items-center justify-center shrink-0">
+              <MapPin className="h-5 w-5" />
             </div>
           </div>
 
-          {/* Card 3: Panggilan Bel Masuk */}
+          {/* Card 3: Menu Siap Saji */}
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-start justify-between">
             <div className="space-y-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-600">
-                Panggilan Bel Masuk
+              <span className="text-xs font-bold uppercase tracking-wider text-[#0284c7]">
+                Menu Siap Saji
               </span>
               <div className="text-2xl font-black text-slate-900 leading-none">
-                {incomingCalls.filter((c) => c.status !== "COMPLETED").length}{" "}
-                <span className="text-sm font-semibold text-slate-500">Panggilan</span>
+                {merchant.menu.filter((m) => m.isAvailable ?? true).length}{" "}
+                <span className="text-sm font-semibold text-slate-500">
+                  / {merchant.menu.length} Varian
+                </span>
               </div>
-              <p className="text-xs text-amber-700 font-medium">
-                {incomingCalls.some((c) => c.status === "PENDING")
-                  ? "1 panggilan menunggu tanggapan Anda!"
-                  : "Semua panggilan telah dilayani"}
+              <p className="text-xs text-slate-500 font-medium">
+                {merchant.menu.filter((m) => m.isAvailable ?? true).length > 0
+                  ? "Varian menu aktif & siap dipesan warga"
+                  : "Semua varian menu ditandai habis"}
               </p>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-              <Bell className="h-5 w-5" />
+            <div className="w-11 h-11 rounded-xl bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0">
+              <UtensilsCrossed className="h-5 w-5" />
             </div>
           </div>
         </div>
@@ -489,7 +444,7 @@ export default function MerchantDashboardClient({
                   type="button"
                   onClick={handleRefreshGps}
                   disabled={isRefreshingGps}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] text-slate-900 font-bold text-xs shadow-xs transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#006194] hover:bg-[#004d77] text-white font-bold text-xs shadow-xs transition-all disabled:opacity-50"
                 >
                   <RefreshCw className={`h-4 w-4 ${isRefreshingGps ? "animate-spin" : ""}`} />
                   Perbarui Titik Lokasi
@@ -510,18 +465,10 @@ export default function MerchantDashboardClient({
                     },
                   },
                 ]}
-                selectedMerchantId={merchant.id}
+                selectedMerchantId={null}
                 onSelectMerchant={() => {}}
                 userLocation={[displayLng, displayLat]}
               />
-
-              {/* Pin Tengah Floating Card Highlight */}
-              <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                <div className="px-3.5 py-1.5 rounded-xl bg-slate-900/90 text-white text-xs font-bold shadow-lg flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Lapak Anda di Sini: {displayLat.toFixed(4)}, {displayLng.toFixed(4)}
-                </div>
-              </div>
 
               {/* Bottom Floating Telemetry Bar */}
               <div className="absolute bottom-3 left-3 right-3 z-20 bg-white/95 backdrop-blur-sm p-3 rounded-xl border border-slate-200/90 flex items-center justify-between shadow-sm">
@@ -603,87 +550,47 @@ export default function MerchantDashboardClient({
               </div>
             </div>
 
-            {/* 2. Daftar Panggilan Pembeli Terkini (Bell Call List) */}
+            {/* 2. Tautan & Promosi Lapak */}
             <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
               <div className="flex items-center justify-between pb-1 border-b border-slate-100">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <Bell className="h-4 w-4 text-amber-500" />
-                    Panggilan Bel Pembeli
+                    <Share2 className="h-4 w-4 text-[#0284c7]" />
+                    Promosikan Lapak Anda
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Warga terdekat yang memanggil gerobak Anda
+                    Bagikan tautan peta live ke pelanggan atau grup WhatsApp
                   </p>
                 </div>
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200">
-                  {incomingCalls.length} Permintaan
-                </span>
               </div>
 
-              <div className="space-y-3">
-                {incomingCalls.map((call) => (
-                  <div
-                    key={call.id}
-                    className={`p-3.5 rounded-xl border flex flex-col gap-2.5 transition-all ${
-                      call.status === "COMPLETED"
-                        ? "bg-slate-50 border-slate-200 opacity-60"
-                        : call.status === "ACCEPTED"
-                        ? "bg-emerald-50/70 border-emerald-200"
-                        : "bg-amber-50/70 border-amber-200"
-                    }`}
+              <div className="p-4 rounded-xl bg-sky-50/60 border border-sky-100 space-y-3">
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Pelanggan dapat memantau rute dan posisi gerobak Anda secara langsung melalui peta publik JejakLapak tanpa perlu menginstal aplikasi.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                  <Link
+                    href={`/explore?merchant=${merchant.slug || merchant.id}`}
+                    target="_blank"
+                    className="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#006194] hover:bg-[#004d77] text-white text-xs font-bold transition-colors"
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-slate-900">{call.name}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-bold">
-                            {call.distance}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-600 mt-1">&quot;{call.notes}&quot;</p>
-                      </div>
-                      <span className="text-[11px] text-slate-500 font-medium">{call.time}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60">
-                      {call.status === "COMPLETED" ? (
-                        <span className="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 text-[11px] font-bold">
-                          ✓ Sudah Dilayani
-                        </span>
-                      ) : call.status === "ACCEPTED" ? (
-                        <>
-                          <span className="flex-1 text-center py-1.5 px-3 rounded-lg bg-emerald-600 text-white text-xs font-bold">
-                            ✓ Sedang Menuju ke Lokasi
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleCompleteCall(call.id)}
-                            className="py-1.5 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50"
-                          >
-                            Selesai
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => handleRespondCall(call.id)}
-                            className="flex-1 py-1.5 px-3 rounded-lg bg-[#60C1E5] hover:bg-[#4eb3d8] text-slate-900 text-xs font-bold transition-colors text-center"
-                          >
-                            Saya Segera Merapat
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleCompleteCall(call.id)}
-                            className="py-1.5 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50"
-                          >
-                            Selesai
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Lihat di Peta Pembeli
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        const url = `${window.location.origin}/explore?merchant=${merchant.slug || merchant.id}`;
+                        navigator.clipboard?.writeText(url);
+                        showToast("Tautan lapak berhasil disalin ke clipboard!");
+                      }
+                    }}
+                    className="w-full sm:w-auto py-2 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                  >
+                    Salin Tautan
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -775,7 +682,7 @@ export default function MerchantDashboardClient({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] px-4 py-2 text-xs font-bold text-slate-900 transition"
+                  className="rounded-xl bg-[#006194] hover:bg-[#004d77] px-4 py-2 text-xs font-bold text-white transition"
                 >
                   Simpan &amp; Pancarkan
                 </button>
@@ -793,9 +700,9 @@ export default function MerchantDashboardClient({
               <Store className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Akhiri Sesi Berjualan?</h3>
+              <h3 className="text-lg font-bold text-slate-900">Ubah Status Menjadi Tidak Aktif?</h3>
               <p className="text-xs text-slate-500 mt-1">
-                Lapak Anda akan ditutup dan pin gerobak tidak lagi muncul sebagai aktif di peta pelanggan.
+                Sesi jualan hari ini akan ditutup dan pin gerobak Anda tidak lagi muncul sebagai aktif di peta pembeli.
               </p>
             </div>
             <div className="flex flex-col gap-2 pt-2">
@@ -803,16 +710,16 @@ export default function MerchantDashboardClient({
                 type="button"
                 onClick={handleEndSession}
                 disabled={isPending}
-                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-sm transition-all disabled:opacity-50"
+                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm shadow-sm transition-all disabled:opacity-50 cursor-pointer"
               >
-                {isPending ? "Memproses..." : "Ya, Tutup Lapak Sekarang"}
+                {isPending ? "Memproses..." : "Ya, Ubah Menjadi Tidak Aktif"}
               </button>
               <button
                 type="button"
                 onClick={() => setShowEndModal(false)}
-                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all"
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all cursor-pointer"
               >
-                Kembali Lanjut Jualan
+                Batal
               </button>
             </div>
           </div>

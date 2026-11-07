@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { BASEMAPS } from "@/config/basemaps";
 import {
-  Radio,
-  Navigation,
   Compass,
+  Navigation,
   Play,
   Pause,
   FastForward,
   Check,
   ChevronDown,
   Layers,
+  PanelLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,8 +20,8 @@ interface MapControlsProps {
   onSelectBasemap: (id: string) => void;
   is3D: boolean;
   onToggle3D: () => void;
-  followCamera: boolean;
-  onToggleFollowCamera: () => void;
+  followCamera?: boolean;
+  onToggleFollowCamera?: () => void;
   isSimulating: boolean;
   onToggleSimulation: () => void;
   simulationSpeed: number;
@@ -30,6 +30,9 @@ interface MapControlsProps {
   isLocating?: boolean;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
+  isLeftSidebarOpen?: boolean;
+  onOpenLeftSidebar?: () => void;
+  merchantCount?: number;
 }
 
 export function MapControls({
@@ -45,6 +48,9 @@ export function MapControls({
   isLocating = false,
   onZoomIn,
   onZoomOut,
+  isLeftSidebarOpen = true,
+  onOpenLeftSidebar,
+  merchantCount,
 }: MapControlsProps) {
   const [showMoreBasemaps, setShowMoreBasemaps] = useState(false);
   const currentBasemap = BASEMAPS[activeBasemap] || BASEMAPS["esri-street"];
@@ -53,22 +59,22 @@ export function MapControls({
     <>
       {/* ── Top Floating Map Controls HUD ── */}
       <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between pointer-events-none z-30 select-none">
-        {/* Telemetry Pill Left */}
+        {/* Left Side: Toggle Buka Sidebar Lapak ketika sidebar tertutup */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Radius Pill */}
-          <div className="bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-sm border border-slate-200/70 flex items-center gap-2 text-slate-900">
-            <Radio className="h-4 w-4 text-[#006194]" />
-            <span className="text-xs font-semibold">Radius: 1.5 Km</span>
-          </div>
-
-          {/* Latency Pill */}
-          <div className="hidden sm:flex bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-sm border border-slate-200/70 items-center gap-1.5 text-slate-800">
-            <span className="w-2 h-2 rounded-full bg-[#006781] animate-pulse" />
-            <span className="text-xs text-slate-600 font-medium">Latensi: 0.4 dtk</span>
-          </div>
+          {onOpenLeftSidebar && !isLeftSidebarOpen && (
+            <button
+              type="button"
+              onClick={onOpenLeftSidebar}
+              className="flex items-center gap-1.5 bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-sm border border-slate-200/80 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#006194] transition-colors"
+              title="Buka Daftar Lapak"
+            >
+              <PanelLeft className="h-4 w-4 text-[#006194]" />
+              <span>Daftar Lapak {merchantCount !== undefined ? `(${merchantCount})` : ""}</span>
+            </button>
+          )}
         </div>
 
-        {/* Basemap Switcher Right — Satu pilihan saja + dropdown */}
+        {/* Basemap Switcher Right — Dropdown maps saja */}
         <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur p-1 rounded-lg shadow-sm border border-slate-200/70 pointer-events-auto relative">
           <div className="relative">
             <button

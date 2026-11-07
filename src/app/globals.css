@@ -282,3 +282,12 @@ body {
     @apply font-sans;
   }
 }
+
+/* Sembunyikan semua attribution / watermark peta MapLibre */
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-logo,
+.mapboxgl-ctrl-attrib,
+.mapboxgl-ctrl-logo,
+.maplibregl-compact {
+  display: none !important;
+}

@@ -14,7 +14,6 @@ interface VendorDetailDrawerProps {
   merchant: Merchant | null;
   isOpen: boolean;
   onClose: () => void;
-  onCallVendor: (merchant: Merchant) => void;
   followCamera: boolean;
   onToggleFollowCamera: () => void;
 }
@@ -23,7 +22,6 @@ export function VendorDetailDrawer({
   merchant,
   isOpen,
   onClose,
-  onCallVendor,
   followCamera,
   onToggleFollowCamera,
 }: VendorDetailDrawerProps) {
@@ -45,7 +43,6 @@ export function VendorDetailDrawer({
           <VendorDetailContent
             merchant={merchant}
             onClose={onClose}
-            onCallVendor={onCallVendor}
             followCamera={followCamera}
             onToggleFollowCamera={onToggleFollowCamera}
           />

@@ -18,8 +18,7 @@ import {
   X,
   ToggleLeft,
   ToggleRight,
-  PanelLeftClose,
-  PanelLeftOpen,
+  PanelLeft,
 } from "lucide-react";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
 import { toast } from "@/components/ui/sonner";
@@ -209,18 +208,17 @@ export default function MerchantMenuClient({
           <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsSidebarOpen((prev) => !prev)}
-                  title={isSidebarOpen ? "Tutup Sidebar Navigasi" : "Buka Sidebar Navigasi"}
-                  className="h-10 w-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shrink-0 cursor-pointer"
-                >
-                  {isSidebarOpen ? (
-                    <PanelLeftClose className="h-5 w-5" />
-                  ) : (
-                    <PanelLeftOpen className="h-5 w-5" />
-                  )}
-                </button>
+                {!isSidebarOpen && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarOpen(true)}
+                    title="Buka Menu Sidebar"
+                    className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl shadow-xs border border-slate-200 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:text-[#006194] transition-colors cursor-pointer shrink-0"
+                  >
+                    <PanelLeft className="h-4 w-4 text-[#006194]" />
+                    <span className="hidden sm:inline">Menu Sidebar</span>
+                  </button>
+                )}
 
                 <Link
                   href="/merchant/dashboard"
@@ -247,7 +245,7 @@ export default function MerchantMenuClient({
             <button
               type="button"
               onClick={handleOpenCreate}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] px-4 py-2.5 text-xs font-bold text-slate-900 shadow-sm transition"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#006194] hover:bg-[#004d77] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition"
             >
               <Plus className="h-4 w-4" />
               Tambah Menu Baru
@@ -490,7 +488,7 @@ export default function MerchantMenuClient({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="rounded-xl bg-[#60C1E5] hover:bg-[#4eb3d8] px-4 py-2 text-xs font-bold text-slate-900 transition disabled:opacity-50"
+                  className="rounded-xl bg-[#006194] hover:bg-[#004d77] px-4 py-2 text-xs font-bold text-white transition disabled:opacity-50"
                 >
                   {isPending ? "Menyimpan..." : "Simpan Menu"}
                 </button>

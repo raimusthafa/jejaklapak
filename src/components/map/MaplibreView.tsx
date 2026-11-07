@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import * as maplibregl from "maplibre-gl";
 import { setWorkerUrl } from "maplibre-gl";
 import { Merchant } from "@/types/merchant";
-import { CulinaryZone, LngLat } from "@/types/location";
+import { LngLat } from "@/types/location";
 import { BASEMAPS, DEFAULT_BASEMAP } from "@/config/basemaps";
 import { BANDUNG_CENTER, DEFAULT_ZOOM } from "@/config/constants";
 import { createVendorMarkerElement } from "./VendorMarkerElement";
@@ -24,12 +24,10 @@ export interface MaplibreViewProps {
   onSelectMerchant: (merchantId: string) => void;
   onOpenDetails?: (merchant: Merchant) => void;
   onDeselect?: () => void;
-  culinaryZones?: CulinaryZone[];
   activeBasemapId?: string;
   is3D?: boolean;
   followCamera?: boolean;
   userLocation?: LngLat | null;
-  calledVendorRoute?: LngLat[] | null;
   zoomAction?: { type: "in" | "out"; id: number } | null;
 }
 
@@ -39,12 +37,10 @@ export default function MaplibreView({
   onSelectMerchant,
   onOpenDetails,
   onDeselect,
-  culinaryZones = [],
   activeBasemapId = DEFAULT_BASEMAP,
   is3D = false,
   followCamera = false,
   userLocation = null,
-  calledVendorRoute = null,
   zoomAction = null,
 }: MaplibreViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -53,77 +49,11 @@ export default function MaplibreView({
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Keep latest prop values in refs so callbacks don't get stale closures
-  const culinaryZonesRef = useRef(culinaryZones);
-  const selectedMerchantIdRef = useRef(selectedMerchantId);
-  const calledVendorRouteRef = useRef(calledVendorRoute);
+  // Keep latest 3D prop value in ref
   const is3DRef = useRef(is3D);
-
-  // Sync refs via layout effects
-  useEffect(() => { culinaryZonesRef.current = culinaryZones; });
-  useEffect(() => { selectedMerchantIdRef.current = selectedMerchantId; });
-  useEffect(() => { calledVendorRouteRef.current = calledVendorRoute; });
   useEffect(() => { is3DRef.current = is3D; });
 
-  // ── GeoJSON helpers ────────────────────────────────────────────────────
-  const getZonesGeoJson = useCallback(
-    (zones: CulinaryZone[]) => ({
-      type: "FeatureCollection" as const,
-      features: (zones || []).map((zone) => ({
-        type: "Feature" as const,
-        properties: { id: zone.id, name: zone.name, color: zone.color },
-        geometry: {
-          type: "Polygon" as const,
-          coordinates: [zone.coordinates],
-        },
-      })),
-    }),
-    []
-  );
-
-  const getBreadcrumbsGeoJson = useCallback(
-    (merchantId: string | null, merchantList: Merchant[]) => {
-      if (!merchantId)
-        return { type: "FeatureCollection" as const, features: [] };
-      const merchant = merchantList.find((m) => m.id === merchantId);
-      if (!merchant?.breadcrumbs || merchant.breadcrumbs.length < 2)
-        return { type: "FeatureCollection" as const, features: [] };
-      return {
-        type: "FeatureCollection" as const,
-        features: [
-          {
-            type: "Feature" as const,
-            properties: { id: merchant.id, name: merchant.name },
-            geometry: {
-              type: "LineString" as const,
-              coordinates: merchant.breadcrumbs,
-            },
-          },
-        ],
-      };
-    },
-    []
-  );
-
-  const getCallRouteGeoJson = useCallback((routeCoords: LngLat[] | null) => {
-    if (!routeCoords || routeCoords.length < 2)
-      return { type: "FeatureCollection" as const, features: [] };
-    return {
-      type: "FeatureCollection" as const,
-      features: [
-        {
-          type: "Feature" as const,
-          properties: { type: "call-route" },
-          geometry: {
-            type: "LineString" as const,
-            coordinates: routeCoords,
-          },
-        },
-      ],
-    };
-  }, []);
-
-  // ── Basemap style generator (raster only — GeoJSON added separately) ──
+  // ── Basemap style generator (clean raster map without line overlays) ──
   const generateRasterStyle = useCallback(
     (basemapKey: string): maplibregl.StyleSpecification => {
       const basemap = BASEMAPS[basemapKey] || BASEMAPS[DEFAULT_BASEMAP];
@@ -152,107 +82,14 @@ export default function MaplibreView({
     []
   );
 
-  // ── Re-add GeoJSON sources & layers after any style change ───────────
-  const addGeoJsonLayers = useCallback(
-    (map: maplibregl.Map) => {
-      try {
-        const layerIds = [
-          "culinary-zones-fill",
-          "culinary-zones-line",
-          "routes-line-casing",
-          "routes-line",
-          "call-route-line",
-        ];
-        const sourceIds = ["culinary-zones", "routes-line", "call-vendor-line"];
-
-        layerIds.forEach((id) => {
-          if (map.getLayer(id)) map.removeLayer(id);
-        });
-        sourceIds.forEach((id) => {
-          if (map.getSource(id)) map.removeSource(id);
-        });
-
-        // Add culinary zones source
-        map.addSource("culinary-zones", {
-          type: "geojson",
-          data: getZonesGeoJson(culinaryZonesRef.current),
-        });
-
-        // Add breadcrumb routes source
-        map.addSource("routes-line", {
-          type: "geojson",
-          data: getBreadcrumbsGeoJson(selectedMerchantIdRef.current, []),
-        });
-
-        // Add call-vendor route source
-        map.addSource("call-vendor-line", {
-          type: "geojson",
-          data: getCallRouteGeoJson(calledVendorRouteRef.current),
-        });
-
-        // Layers
-        map.addLayer({
-          id: "culinary-zones-fill",
-          type: "fill",
-          source: "culinary-zones",
-          paint: {
-            "fill-color": ["get", "color"],
-            "fill-opacity": 0.16,
-          },
-        });
-
-        map.addLayer({
-          id: "culinary-zones-line",
-          type: "line",
-          source: "culinary-zones",
-          paint: {
-            "line-color": ["get", "color"],
-            "line-width": 2,
-            "line-dasharray": [2, 2],
-          },
-        });
-
-        map.addLayer({
-          id: "routes-line-casing",
-          type: "line",
-          source: "routes-line",
-          paint: {
-            "line-color": "#ffffff",
-            "line-width": 6,
-            "line-opacity": 0.85,
-          },
-        });
-
-        map.addLayer({
-          id: "routes-line",
-          type: "line",
-          source: "routes-line",
-          paint: {
-            "line-color": "#006194",
-            "line-width": 3.5,
-            "line-dasharray": [1.5, 1.5],
-          },
-        });
-
-        map.addLayer({
-          id: "call-route-line",
-          type: "line",
-          source: "call-vendor-line",
-          paint: {
-            "line-color": "#994100",
-            "line-width": 4,
-            "line-dasharray": [2, 2],
-          },
-        });
-
-        // Apply current 3D pitch immediately after style loads
-        map.easeTo({ pitch: is3DRef.current ? 45 : 0, duration: 0 });
-      } catch (err) {
-        console.warn("Error adding GeoJSON layers:", err);
-      }
-    },
-    [getZonesGeoJson, getBreadcrumbsGeoJson, getCallRouteGeoJson]
-  );
+  // ── Apply pitch after any style change ─────────────────────────────
+  const addGeoJsonLayers = useCallback((map: maplibregl.Map) => {
+    try {
+      map.easeTo({ pitch: is3DRef.current ? 45 : 0, duration: 0 });
+    } catch (err) {
+      console.warn("Error applying pitch:", err);
+    }
+  }, []);
 
   // ── 1. Initialize Map (once) ─────────────────────────────────────────
   useEffect(() => {
@@ -266,6 +103,7 @@ export default function MaplibreView({
       pitch: is3D ? 45 : 0,
       bearing: 0,
       maxPitch: 60,
+      attributionControl: false, // Menghilangkan watermark / attribution peta
     });
 
     map.on("error", (e) => {
@@ -401,33 +239,6 @@ export default function MaplibreView({
     });
   }, [merchants, selectedMerchantId, mapLoaded, onSelectMerchant, onOpenDetails, onDeselect]);
 
-  // ── 6. Update GeoJSON sources when selection/route changes ───────────
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map || !mapLoaded) return;
-
-    const routesSource = map.getSource("routes-line") as
-      | maplibregl.GeoJSONSource
-      | undefined;
-    if (routesSource) {
-      routesSource.setData(getBreadcrumbsGeoJson(selectedMerchantId, merchants));
-    }
-
-    const callRouteSource = map.getSource("call-vendor-line") as
-      | maplibregl.GeoJSONSource
-      | undefined;
-    if (callRouteSource) {
-      callRouteSource.setData(getCallRouteGeoJson(calledVendorRoute));
-    }
-  }, [
-    selectedMerchantId,
-    calledVendorRoute,
-    merchants,
-    mapLoaded,
-    getBreadcrumbsGeoJson,
-    getCallRouteGeoJson,
-  ]);
-
   // ── 7. Camera pan when merchant selected ─────────────────────────────
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -441,15 +252,16 @@ export default function MaplibreView({
       selected.location.latitude,
     ];
 
-    if (followCamera) {
-      map.easeTo({ center: targetCoords, duration: 900 });
-    } else {
-      map.flyTo({
-        center: targetCoords,
-        zoom: Math.max(map.getZoom(), 15),
-        essential: true,
-      });
-    }
+    // Mode kunci kamera (follow camera) dinonaktifkan
+    // if (followCamera) {
+    //   map.easeTo({ center: targetCoords, duration: 900 });
+    // } else {
+    map.flyTo({
+      center: targetCoords,
+      zoom: Math.max(map.getZoom(), 15),
+      essential: true,
+    });
+    // }
   }, [selectedMerchantId, followCamera, merchants, mapLoaded]);
 
   // ── 8. User Location Pin ─────────────────────────────────────────────

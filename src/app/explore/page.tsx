@@ -6,15 +6,13 @@ import { Merchant } from "@/types/merchant";
 import { LngLat } from "@/types/location";
 import { merchantService } from "@/services/mock/merchantService";
 import { telemetrySimulator } from "@/services/mock/telemetrySimulator";
-import { MOCK_CULINARY_ZONES } from "@/data/mock/culinaryZones";
 import { DEFAULT_BASEMAP } from "@/config/basemaps";
 import { MaplibreContainer } from "@/components/map/MaplibreContainer";
 import { MapControls } from "@/components/map/MapControls";
 import { VendorSidebar } from "@/components/explore/VendorSidebar";
 import { VendorDetailContent } from "@/components/explore/VendorDetailContent";
 import { VendorDetailDrawer } from "@/components/explore/VendorDetailDrawer";
-import { CallVendorModal } from "@/components/explore/CallVendorModal";
-import { Map as MapIcon, ListFilter, AlertCircle, PanelLeft } from "lucide-react";
+import { Map as MapIcon, ListFilter, AlertCircle } from "lucide-react";
 
 function ExploreContent() {
   const searchParams = useSearchParams();
@@ -45,8 +43,6 @@ function ExploreContent() {
 
   // Mobile drawer state
   const [drawerMerchant, setDrawerMerchant] = useState<Merchant | null>(null);
-  const [callModalMerchant, setCallModalMerchant] = useState<Merchant | null>(null);
-  const [calledRoute, setCalledRoute] = useState<LngLat[] | null>(null);
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState("");
@@ -336,31 +332,16 @@ function ExploreContent() {
             mobileTab === "map" ? "block" : "hidden md:block"
           }`}
         >
-          {/* Button to reopen Left Sidebar when closed */}
-          {!isLeftSidebarOpen && (
-            <button
-              type="button"
-              onClick={() => setIsLeftSidebarOpen(true)}
-              className="hidden md:flex absolute top-3.5 left-3.5 z-20 items-center gap-1.5 bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg shadow-md border border-slate-200 text-xs font-semibold text-slate-800 hover:bg-slate-50 transition"
-              title="Buka Daftar Lapak"
-            >
-              <PanelLeft className="h-4 w-4 text-[#006194]" />
-              <span>Daftar Lapak ({filteredMerchants.length})</span>
-            </button>
-          )}
-
           <MaplibreContainer
             merchants={filteredMerchants}
             selectedMerchantId={selectedMerchantId}
             onSelectMerchant={handleSelectMerchant}
             onOpenDetails={handleOpenDetails}
             onDeselect={handleDeselectMerchant}
-            culinaryZones={MOCK_CULINARY_ZONES}
             activeBasemapId={activeBasemap}
             is3D={is3D}
             followCamera={followCamera}
             userLocation={userLocation}
-            calledVendorRoute={calledRoute}
             zoomAction={zoomAction}
           />
 
@@ -380,6 +361,9 @@ function ExploreContent() {
             isLocating={isLocating}
             onZoomIn={() => setZoomAction({ type: "in", id: Date.now() })}
             onZoomOut={() => setZoomAction({ type: "out", id: Date.now() })}
+            isLeftSidebarOpen={isLeftSidebarOpen}
+            onOpenLeftSidebar={() => setIsLeftSidebarOpen(true)}
+            merchantCount={filteredMerchants.length}
           />
         </main>
 
@@ -394,7 +378,6 @@ function ExploreContent() {
                 setIsRightSidebarOpen(false);
                 setSelectedMerchantId(null);
               }}
-              onCallVendor={(m) => setCallModalMerchant(m)}
               followCamera={followCamera}
               onToggleFollowCamera={() => setFollowCamera(!followCamera)}
             />
@@ -437,19 +420,8 @@ function ExploreContent() {
         merchant={drawerMerchant}
         isOpen={Boolean(drawerMerchant)}
         onClose={() => setDrawerMerchant(null)}
-        onCallVendor={(m) => setCallModalMerchant(m)}
         followCamera={followCamera}
         onToggleFollowCamera={() => setFollowCamera(!followCamera)}
-      />
-
-      {/* Call Vendor Modal */}
-      <CallVendorModal
-        merchant={callModalMerchant}
-        userLocation={userLocation}
-        onClose={() => setCallModalMerchant(null)}
-        onConfirmCall={(route) => {
-          setCalledRoute(route);
-        }}
       />
     </div>
   );
