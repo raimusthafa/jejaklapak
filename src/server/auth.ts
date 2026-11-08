@@ -47,11 +47,12 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     let phone: string | undefined = user.user_metadata?.phone as string | undefined;
     let merchantId: string | undefined;
     let merchantSlug: string | undefined;
-    let merchantName: string | undefined;
+    let merchantName: string | undefined =
+      (user.user_metadata?.merchant_name as string) || undefined;
 
     // Coba ambil relasi dari database Prisma
     try {
-      const dbUser = await prisma.user.findUnique({
+      let dbUser = await prisma.user.findUnique({
         where: { id: user.id },
         include: {
           merchants: {
@@ -64,6 +65,94 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
           },
         },
       });
+
+      // Auto-sync jika user di Supabase belum ada di Prisma
+      if (!dbUser && role === "MERCHANT") {
+        try {
+          const rawMeta = user.user_metadata || {};
+          const mName = (rawMeta.merchant_name as string) || name || "Lapak Pedagang";
+          const cleanSlugBase = mName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+          const randomSuffix = Math.random().toString(36).substring(2, 6);
+          const slug = `${cleanSlugBase}-${randomSuffix}`;
+
+          dbUser = await prisma.user.create({
+            data: {
+              id: user.id,
+              name,
+              email: user.email ?? "",
+              phone: phone || null,
+              role: "MERCHANT",
+              merchants: {
+                create: {
+                  name: mName,
+                  slug,
+                  category: (rawMeta.category as string) || "Makanan Berat",
+                  phone: phone || "08000000000",
+                  address: (rawMeta.address as string) || "Kota Bandung",
+                  district: (rawMeta.district as string) || "Coblong (Dago / Dipati Ukur)",
+                  city: "Bandung",
+                  operatingArea: (rawMeta.operating_area as string) || "Bandung",
+                  verificationStatus: "PENDING",
+                },
+              },
+            },
+            include: {
+              merchants: {
+                take: 1,
+                select: {
+                  id: true,
+                  slug: true,
+                  name: true,
+                },
+              },
+            },
+          });
+        } catch (syncErr) {
+          console.warn("Auto-sync merchant failed:", syncErr);
+        }
+      } else if (
+        dbUser &&
+        dbUser.merchants.length === 0 &&
+        role === "MERCHANT" &&
+        user.user_metadata?.merchant_name
+      ) {
+        try {
+          const rawMeta = user.user_metadata || {};
+          const mName = (rawMeta.merchant_name as string) || name || "Lapak Pedagang";
+          const cleanSlugBase = mName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+          const randomSuffix = Math.random().toString(36).substring(2, 6);
+          const slug = `${cleanSlugBase}-${randomSuffix}`;
+
+          const newM = await prisma.merchant.create({
+            data: {
+              ownerId: dbUser.id,
+              name: mName,
+              slug,
+              category: (rawMeta.category as string) || "Makanan Berat",
+              phone: phone || "08000000000",
+              address: (rawMeta.address as string) || "Kota Bandung",
+              district: (rawMeta.district as string) || "Coblong (Dago / Dipati Ukur)",
+              city: "Bandung",
+              operatingArea: (rawMeta.operating_area as string) || "Bandung",
+              verificationStatus: "PENDING",
+            },
+            select: {
+              id: true,
+              slug: true,
+              name: true,
+            },
+          });
+          dbUser.merchants = [newM];
+        } catch (syncMErr) {
+          console.warn("Auto-create merchant record failed:", syncMErr);
+        }
+      }
 
       if (dbUser) {
         role = dbUser.role as UserRole;

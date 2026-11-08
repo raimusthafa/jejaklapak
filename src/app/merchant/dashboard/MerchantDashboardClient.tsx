@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MOCK_MERCHANTS } from "@/data/mock/merchants";
 import { merchantService, calculateFreshness } from "@/services/mock/merchantService";
 import { toggleSellingSessionAction, toggleMenuItemAvailabilityAction } from "@/actions/merchant";
 import { useMerchantLocationTracker } from "@/hooks/useMerchantLocationTracker";
@@ -34,7 +33,44 @@ export default function MerchantDashboardClient({
   user?: AuthUser;
   initialMerchant?: Merchant | null;
 }) {
-  const defaultMerchant = initialMerchant || MOCK_MERCHANTS[0];
+  const fallbackMerchant: Merchant = {
+    id: user?.merchantId || user?.id || "merchant-new",
+    ownerId: user?.id || "",
+    ownerName: user?.name || "Mitra Pedagang",
+    name: user?.merchantName || "Lapak Saya",
+    slug: user?.merchantSlug || "lapak-saya",
+    tagline: "",
+    description: "",
+    category: "Makanan Berat",
+    iconEmoji: "🍲",
+    image: "/images/merchants/default.jpg",
+    phone: user?.phone || "",
+    district: "Kota Bandung",
+    city: "Bandung",
+    operatingArea: "Kota Bandung",
+    verificationStatus: "PENDING",
+    sellingStatus: "ENDED",
+    location: {
+      id: user?.merchantId || user?.id || "merchant-new",
+      merchantId: user?.merchantId || user?.id || "merchant-new",
+      latitude: -6.9175,
+      longitude: 107.6191,
+      accuracyMeters: 10,
+      heading: 0,
+      speedKmh: 0,
+      batteryLevel: 100,
+      addressHint: "Kota Bandung",
+      district: "Kota Bandung",
+      city: "Bandung",
+      capturedAt: new Date().toISOString(),
+    },
+    schedule: [],
+    breadcrumbs: [],
+    menu: [],
+    createdAt: new Date().toISOString(),
+  };
+
+  const defaultMerchant = initialMerchant || fallbackMerchant;
   const [merchant, setMerchant] = useState<Merchant>(defaultMerchant);
   const [status, setStatus] = useState<SellingStatus>(defaultMerchant.sellingStatus);
   const [lastCapturedAt, setLastCapturedAt] = useState(defaultMerchant.location.capturedAt);
@@ -50,23 +86,19 @@ export default function MerchantDashboardClient({
   // Sync merchant with live database on mount
   useEffect(() => {
     async function loadMerchantData() {
+      const targetId = user?.merchantId || user?.merchantSlug;
+      if (!targetId) return;
+
       try {
-        const res = await fetch("/api/merchants");
+        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
-            const found =
-              json.data.find(
-                (m: Merchant) =>
-                  (user?.merchantSlug && m.slug === user.merchantSlug) ||
-                  (user?.merchantId && m.id === user.merchantId) ||
-                  m.slug === "cuanki-batagor-serayu-keliling"
-              ) || json.data[0];
-            setMerchant(found);
-            setStatus(found.sellingStatus);
-            setLastCapturedAt(found.location.capturedAt);
-            setManualLat(found.location.latitude.toString());
-            setManualLng(found.location.longitude.toString());
+          if (json.ok && json.data) {
+            setMerchant(json.data);
+            setStatus(json.data.sellingStatus);
+            setLastCapturedAt(json.data.location.capturedAt);
+            setManualLat(json.data.location.latitude.toString());
+            setManualLng(json.data.location.longitude.toString());
           }
         }
       } catch (err) {

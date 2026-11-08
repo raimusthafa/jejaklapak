@@ -127,6 +127,9 @@ export async function loginAction(
 
     revalidatePath("/", "layout");
     revalidatePath("/merchant/dashboard");
+    revalidatePath("/merchant/menu");
+    revalidatePath("/merchant/profile");
+    revalidatePath("/merchant/schedule");
     revalidatePath("/admin/dashboard");
 
     return {

@@ -9,9 +9,9 @@ export const instant = false;
 async function MerchantScheduleLoader() {
   await connection();
   const merchantUser = await requireMerchant();
-  const schedules = await getMerchantSchedules(
-    merchantUser.merchantId || "00000000-0000-4000-8000-000000000100"
-  );
+  const schedules = merchantUser.merchantId
+    ? await getMerchantSchedules(merchantUser.merchantId)
+    : [];
   return <MerchantScheduleClient user={merchantUser} initialSchedules={schedules} />;
 }
 
