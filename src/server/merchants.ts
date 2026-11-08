@@ -180,7 +180,7 @@ export async function getMerchantByIdOrSlug(idOrSlug: string): Promise<Merchant 
   if (isUuid) {
     return await getMerchantForUser({ merchantId: idOrSlug });
   }
-  return (await getMerchantBySlug(idOrSlug)) || (await getMerchantForUser({ merchantSlug: idOrSlug }));
+  return (await getMerchantForUser({ merchantSlug: idOrSlug })) || (await getMerchantBySlug(idOrSlug));
 }
 
 /**
@@ -188,6 +188,7 @@ export async function getMerchantByIdOrSlug(idOrSlug: string): Promise<Merchant 
  */
 export async function getMerchantForUser(user: {
   id?: string;
+  name?: string;
   merchantId?: string | null;
   merchantSlug?: string | null;
   email?: string;
@@ -204,6 +205,7 @@ export async function getMerchantForUser(user: {
           ],
         },
         include: {
+          owner: true,
           schedules: { orderBy: { dayOfWeek: "asc" } },
           menuItems: { orderBy: { createdAt: "asc" } },
           sessions: {
@@ -235,7 +237,7 @@ export async function getMerchantForUser(user: {
         return {
           id: dbMerchant.id,
           ownerId: dbMerchant.ownerId,
-          ownerName: mockMatch?.ownerName ?? "Mitra Pedagang",
+          ownerName: dbMerchant.owner?.name ?? user.name ?? "Mitra Pedagang",
           name: dbMerchant.name,
           slug: dbMerchant.slug,
           tagline: dbMerchant.description ?? mockMatch?.tagline ?? "",
@@ -253,18 +255,18 @@ export async function getMerchantForUser(user: {
           location: {
             id: latestLocation?.id ?? dbMerchant.id,
             merchantId: dbMerchant.id,
-            latitude: latestLocation?.latitude ?? mockMatch?.location.latitude ?? -6.9032,
-            longitude: latestLocation?.longitude ?? mockMatch?.location.longitude ?? 107.6231,
-            accuracyMeters: latestLocation?.accuracy ?? 6,
+            latitude: latestLocation?.latitude ?? mockMatch?.location.latitude ?? -6.9175,
+            longitude: latestLocation?.longitude ?? mockMatch?.location.longitude ?? 107.6191,
+            accuracyMeters: latestLocation?.accuracy ?? 10,
             heading: mockMatch?.location.heading ?? 0,
             speedKmh: mockMatch?.location.speedKmh ?? 0,
-            batteryLevel: mockMatch?.location.batteryLevel ?? 88,
+            batteryLevel: mockMatch?.location.batteryLevel ?? 100,
             addressHint: dbMerchant.address || mockMatch?.location.addressHint || "Kota Bandung",
             district: dbMerchant.district,
             city: dbMerchant.city,
             capturedAt: latestLocation
               ? latestLocation.capturedAt.toISOString()
-              : (mockMatch?.location.capturedAt ?? "2026-01-01T00:00:00.000Z"),
+              : dbMerchant.createdAt.toISOString(),
           },
           schedule:
             dbMerchant.schedules.length > 0
@@ -277,17 +279,14 @@ export async function getMerchantForUser(user: {
                 }))
               : (mockMatch?.schedule || []),
           breadcrumbs,
-          menu:
-            dbMerchant.menuItems.length > 0
-              ? dbMerchant.menuItems.map((item) => ({
-                  id: item.id,
-                  name: item.name,
-                  price: item.price,
-                  description: item.description ?? "",
-                  isPopular: false,
-                  isAvailable: item.isAvailable,
-                }))
-              : (mockMatch?.menu || []).map((item) => ({ ...item, isAvailable: item.isAvailable ?? true })),
+          menu: dbMerchant.menuItems.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            description: item.description ?? "",
+            isPopular: false,
+            isAvailable: item.isAvailable,
+          })),
           createdAt: dbMerchant.createdAt.toISOString(),
         };
       }
@@ -296,16 +295,17 @@ export async function getMerchantForUser(user: {
     console.warn("Failed to get merchant for user from DB:", err);
   }
 
-  // Fallback to mock merchant
-  const all = await getPublicMerchants();
-  return (
-    all.find(
+  // Fallback to mock merchant ONLY IF demo ID/slug matches
+  if (user.merchantId || user.merchantSlug) {
+    const all = await getPublicMerchants();
+    const matched = all.find(
       (m) =>
         (user.merchantSlug && m.slug === user.merchantSlug) ||
-        (user.merchantId && m.id === user.merchantId) ||
-        m.slug === "cuanki-batagor-serayu-keliling"
-    ) || all[0] || null
-  );
+        (user.merchantId && m.id === user.merchantId)
+    );
+    if (matched) return matched;
+  }
+  return null;
 }
 
 /**
@@ -316,27 +316,41 @@ export async function getMerchantSchedules(merchantId: string) {
     const isDbLive = await isDatabaseAvailable();
     if (isDbLive) {
       const targetId = await resolveMerchantId(merchantId);
-      const dbSchedules = await prisma.merchantSchedule.findMany({
-        where: { merchantId: targetId },
-        orderBy: { dayOfWeek: "asc" },
+      const dbMerchant = await prisma.merchant.findUnique({
+        where: { id: targetId },
+        select: { id: true },
       });
-      if (dbSchedules.length > 0) {
+      if (dbMerchant) {
+        const dbSchedules = await prisma.merchantSchedule.findMany({
+          where: { merchantId: targetId },
+          orderBy: { dayOfWeek: "asc" },
+        });
         const DAY_NAMES = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
-        return dbSchedules.map((s) => ({
-          dayOfWeek: s.dayOfWeek,
-          dayName: DAY_NAMES[s.dayOfWeek] || `Hari ${s.dayOfWeek}`,
-          isOpen: s.isOpen,
-          startTime: s.startTime,
-          endTime: s.endTime,
+        if (dbSchedules.length > 0) {
+          return dbSchedules.map((s) => ({
+            dayOfWeek: s.dayOfWeek,
+            dayName: DAY_NAMES[s.dayOfWeek] || `Hari ${s.dayOfWeek}`,
+            isOpen: s.isOpen,
+            startTime: s.startTime,
+            endTime: s.endTime,
+          }));
+        }
+        return [1, 2, 3, 4, 5, 6, 0].map((day) => ({
+          dayOfWeek: day,
+          dayName: DAY_NAMES[day] || `Hari ${day}`,
+          isOpen: true,
+          startTime: day === 0 || day === 6 ? "08:00" : "09:00",
+          endTime: day === 0 || day === 6 ? "18:00" : "17:00",
         }));
       }
     }
   } catch (err) {
-    console.warn("DB get schedules failed, fallback to mock:", err);
+    console.warn("DB get schedules failed:", err);
   }
 
-  // Fallback to mock default schedule
-  return MOCK_MERCHANTS[0].schedule;
+  // Fallback to mock default schedule ONLY IF matching demo ID
+  const mockMerchant = (await getPublicMerchants()).find((m) => m.id === merchantId);
+  return mockMerchant?.schedule || [];
 }
 
 /**
@@ -542,11 +556,15 @@ export async function getMerchantMenuItems(merchantId: string) {
     const isDbLive = await isDatabaseAvailable();
     if (isDbLive) {
       const targetId = await resolveMerchantId(merchantId);
-      const items = await prisma.menuItem.findMany({
-        where: { merchantId: targetId },
-        orderBy: { createdAt: "asc" },
+      const dbMerchant = await prisma.merchant.findUnique({
+        where: { id: targetId },
+        select: { id: true },
       });
-      if (items.length > 0) {
+      if (dbMerchant) {
+        const items = await prisma.menuItem.findMany({
+          where: { merchantId: targetId },
+          orderBy: { createdAt: "asc" },
+        });
         return items.map((it) => ({
           id: it.id,
           merchantId: it.merchantId,
@@ -559,13 +577,11 @@ export async function getMerchantMenuItems(merchantId: string) {
       }
     }
   } catch (err) {
-    console.warn("DB get menu items failed, fallback to mock:", err);
+    console.warn("DB get menu items failed:", err);
   }
 
-  // Fallback to mock merchant's menu
-  const mockMerchant = (await getPublicMerchants()).find(
-    (m) => m.id === merchantId || m.slug === "cuanki-batagor-serayu-keliling"
-  );
+  // Fallback to mock merchant's menu ONLY IF matching mock/demo ID
+  const mockMerchant = (await getPublicMerchants()).find((m) => m.id === merchantId);
   return (mockMerchant?.menu || []).map((item) => ({
     id: item.id,
     merchantId: mockMerchant?.id || merchantId,

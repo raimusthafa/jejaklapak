@@ -2,13 +2,22 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MOCK_MERCHANTS } from "@/data/mock/merchants";
-import { DaySchedule, Merchant } from "@/types/merchant";
+import { DaySchedule } from "@/types/merchant";
 import { updateMerchantSchedulesAction } from "@/actions/merchant";
 import { ArrowLeft, Save, PanelLeft } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
 import { toast } from "@/components/ui/sonner";
+
+const DEFAULT_SCHEDULES: DaySchedule[] = [
+  { dayOfWeek: 1, dayName: "Senin", isOpen: true, startTime: "09:00", endTime: "17:00" },
+  { dayOfWeek: 2, dayName: "Selasa", isOpen: true, startTime: "09:00", endTime: "17:00" },
+  { dayOfWeek: 3, dayName: "Rabu", isOpen: true, startTime: "09:00", endTime: "17:00" },
+  { dayOfWeek: 4, dayName: "Kamis", isOpen: true, startTime: "09:00", endTime: "17:00" },
+  { dayOfWeek: 5, dayName: "Jumat", isOpen: true, startTime: "09:00", endTime: "17:00" },
+  { dayOfWeek: 6, dayName: "Sabtu", isOpen: true, startTime: "08:00", endTime: "18:00" },
+  { dayOfWeek: 0, dayName: "Minggu", isOpen: true, startTime: "08:00", endTime: "18:00" },
+];
 
 export default function MerchantScheduleClient({
   user,
@@ -17,31 +26,26 @@ export default function MerchantScheduleClient({
   user?: AuthUser;
   initialSchedules?: DaySchedule[];
 }) {
-  const current = MOCK_MERCHANTS[0];
-  const [merchantId, setMerchantId] = useState(user?.merchantId || current.id);
+  const [merchantId, setMerchantId] = useState(user?.merchantId || "merchant-new");
   const [schedule, setSchedule] = useState<DaySchedule[]>(
-    initialSchedules && initialSchedules.length > 0 ? initialSchedules : current.schedule
+    initialSchedules && initialSchedules.length > 0 ? initialSchedules : DEFAULT_SCHEDULES
   );
   const [isPending, setIsPending] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     async function fetchSchedules() {
+      const targetId = user?.merchantId || user?.merchantSlug;
+      if (!targetId) return;
+
       try {
-        const res = await fetch("/api/merchants");
+        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
-            const found =
-              json.data.find(
-                (m: Merchant) =>
-                  (user?.merchantSlug && m.slug === user.merchantSlug) ||
-                  (user?.merchantId && m.id === user.merchantId) ||
-                  m.slug === "cuanki-batagor-serayu-keliling"
-              ) || json.data[0];
-            setMerchantId(found.id);
-            if (found.schedule && found.schedule.length > 0) {
-              setSchedule(found.schedule);
+          if (json.ok && json.data) {
+            setMerchantId(json.data.id);
+            if (json.data.schedule && json.data.schedule.length > 0) {
+              setSchedule(json.data.schedule);
             }
           }
         }
@@ -97,7 +101,7 @@ export default function MerchantScheduleClient({
         onClose={() => setIsSidebarOpen(false)}
         user={user}
         merchantName={user?.merchantName || "Lapak Saya"}
-        merchantSlug={user?.merchantSlug || current.slug}
+        merchantSlug={user?.merchantSlug || "lapak-saya"}
       />
 
       {/* Main Content Area */}

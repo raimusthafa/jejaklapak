@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { MOCK_MERCHANTS } from "@/data/mock/merchants";
 import { Merchant } from "@/types/merchant";
 import { updateMerchantProfileAction } from "@/actions/merchant";
 import { MerchantCategory } from "@/types/merchant";
@@ -19,7 +18,44 @@ export default function MerchantProfileClient({
   user?: AuthUser;
   initialMerchant?: Merchant | null;
 }) {
-  const current = initialMerchant || MOCK_MERCHANTS[0];
+  const fallbackMerchant: Merchant = {
+    id: user?.merchantId || user?.id || "merchant-new",
+    ownerId: user?.id || "",
+    ownerName: user?.name || "Mitra Pedagang",
+    name: user?.merchantName || "Lapak Saya",
+    slug: user?.merchantSlug || "lapak-saya",
+    tagline: "",
+    description: "",
+    category: "Makanan Berat",
+    iconEmoji: "🍲",
+    image: "/images/merchants/default.jpg",
+    phone: user?.phone || "",
+    district: "Coblong (Dago / Dipati Ukur)",
+    city: "Bandung",
+    operatingArea: "Kota Bandung",
+    verificationStatus: "PENDING",
+    sellingStatus: "ENDED",
+    location: {
+      id: user?.merchantId || user?.id || "merchant-new",
+      merchantId: user?.merchantId || user?.id || "merchant-new",
+      latitude: -6.9175,
+      longitude: 107.6191,
+      accuracyMeters: 10,
+      heading: 0,
+      speedKmh: 0,
+      batteryLevel: 100,
+      addressHint: "Kota Bandung",
+      district: "Kota Bandung",
+      city: "Bandung",
+      capturedAt: new Date().toISOString(),
+    },
+    schedule: [],
+    breadcrumbs: [],
+    menu: [],
+    createdAt: new Date().toISOString(),
+  };
+
+  const current = initialMerchant || fallbackMerchant;
 
   const [merchantId, setMerchantId] = useState(initialMerchant?.id || user?.merchantId || current.id);
   const [name, setName] = useState(initialMerchant?.name || user?.merchantName || current.name);
@@ -37,21 +73,18 @@ export default function MerchantProfileClient({
 
   useEffect(() => {
     async function fetchMerchantData() {
+      const targetId = user?.merchantId || user?.merchantSlug;
+      if (!targetId) return;
+
       try {
-        const res = await fetch("/api/merchants");
+        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`);
         if (res.ok) {
           const json = await res.json();
-          if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
-            const found =
-              json.data.find(
-                (m: Merchant) =>
-                  (user?.merchantSlug && m.slug === user.merchantSlug) ||
-                  (user?.merchantId && m.id === user.merchantId) ||
-                  m.slug === "cuanki-batagor-serayu-keliling"
-              ) || json.data[0];
+          if (json.ok && json.data) {
+            const found = json.data;
             setMerchantId(found.id);
             setName(found.name);
-            setDescription(found.description);
+            setDescription(found.description || "");
             setCategory(found.category);
             setPhone(found.phone);
             setAddress(found.location.addressHint);
