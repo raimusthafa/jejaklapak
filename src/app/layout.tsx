@@ -25,8 +25,15 @@ export const metadata: Metadata = {
   description:
     "Temukan lokasi terkini, jadwal buka, dan rute gerobak pedagang UMKM keliling di sekitarmu secara real-time.",
   icons: {
-    icon: "/logo-icon.png",
-    apple: "/logo-icon.png",
+    icon: [
+      { url: "/favicon.ico?v=3", sizes: "any" },
+      { url: "/favicon-32x32.png?v=3", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png?v=3", sizes: "16x16", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico?v=3",
+    apple: [
+      { url: "/apple-touch-icon.png?v=3", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 

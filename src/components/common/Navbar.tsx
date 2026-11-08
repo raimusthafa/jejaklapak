@@ -7,7 +7,20 @@ import { useState, useEffect } from "react";
 import {
   Compass,
   LogOut,
+  Menu,
+  X,
+  House,
+  Info,
+  CircleHelp,
+  Store,
+  LayoutDashboard,
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { createClient } from "@/lib/supabase/client";
 import { logoutAction } from "@/actions/auth";
 
@@ -20,11 +33,19 @@ interface AuthUserData {
   merchantSlug?: string;
 }
 
+const NAV_ITEMS = [
+  { label: "Beranda", href: "/#beranda", icon: House },
+  { label: "Tentang Kami", href: "/#tentang-kami", icon: Info },
+  { label: "Cara Kerja ", href: "/#cara-kerja", icon: CircleHelp },
+  { label: "Untuk Pedagang UMKM", short: "Untuk Pedagang", href: "/#untuk-pedagang", icon: Store },
+];
+
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<AuthUserData | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -71,6 +92,11 @@ export function Navbar() {
     }
   };
 
+  const goTo = (href: string) => {
+    setMenuOpen(false);
+    window.setTimeout(() => router.push(href), 200);
+  };
+
   // Jangan render navbar pada area dashboard pedagang karena sepenuhnya menggunakan sidebar
   const isMerchantDashboardPage =
     pathname.startsWith("/merchant/dashboard") ||
@@ -82,11 +108,14 @@ export function Navbar() {
     return null;
   }
 
+  const dashboardHref =
+    currentUser?.role === "ADMIN" ? "/admin/dashboard" : "/merchant/dashboard";
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#dce9ff] bg-white/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full border-b border-[#dce9ff] bg-white/85 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         {/* Brand */}
-        <Link href="/" className="flex items-center group">
+        <Link href="/" className="flex items-center group shrink-0">
           <Image
             src="/logo.png"
             alt="JejakLapak"
@@ -98,18 +127,31 @@ export function Navbar() {
           />
         </Link>
 
-        {/* Action Buttons Only */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Menu desktop */}
+        <nav className="hidden md:flex items-center gap-1 ml-4">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-[#3f4850] hover:bg-[#eff4ff] hover:text-[#006194] transition-colors"
+            >
+              {"short" in item ? item.short : item.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Aksi */}
+        <div className="ml-auto flex items-center gap-2">
           {currentUser ? (
-            <div className="flex items-center gap-2 sm:gap-3">
+            <>
               <Link
-                href={currentUser.role === "ADMIN" ? "/admin/dashboard" : "/merchant/dashboard"}
+                href={dashboardHref}
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#eff4ff] border border-[#dce9ff] hover:bg-[#dce9ff] transition"
               >
                 <div className="h-7 w-7 rounded-lg bg-[#cce5ff] text-[#006194] flex items-center justify-center font-bold text-xs uppercase">
                   {currentUser.name.charAt(0)}
                 </div>
-                <div className="flex flex-col text-left">
+                <div className="flex flex-col text-left leading-tight">
                   <span className="text-xs font-bold text-[#0d1c2e] line-clamp-1 max-w-[120px]">
                     {currentUser.name}
                   </span>
@@ -123,40 +165,137 @@ export function Navbar() {
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#3f4850] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/40 rounded-lg transition border border-transparent"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium text-[#3f4850] hover:bg-[#ffdad6]/40 hover:text-[#ba1a1a] transition-colors"
                 title="Keluar dari akun"
+                aria-label="Keluar dari akun"
               >
-                <LogOut className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{isLoggingOut ? "Keluar..." : "Keluar"}</span>
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {isLoggingOut ? "Keluar..." : "Keluar"}
+                </span>
               </button>
-
-              <Link
-                href="/explore"
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#006194] px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#007bb9]"
-              >
-                <Compass className="h-4 w-4" />
-                <span>Buka Peta Live</span>
-              </Link>
-            </div>
+            </>
           ) : (
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Link
-                href="/merchant/login"
-                className="inline-flex items-center justify-center rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-[#3f4850] hover:bg-[#eff4ff] hover:text-[#006194] transition border border-[#bfc7d2]/40"
-              >
-                Masuk Pedagang
-              </Link>
-              <Link
-                href="/explore"
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#006194] px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-[#007bb9]"
-              >
-                <Compass className="h-4 w-4" />
-                <span>Buka Peta Live</span>
-              </Link>
-            </div>
+            <Link
+              href="/merchant/login"
+              className="hidden sm:inline-flex h-10 items-center justify-center rounded-lg border border-[#bfc7d2]/40 px-4 text-sm font-medium text-[#3f4850] hover:bg-[#eff4ff] hover:text-[#006194] transition-colors"
+            >
+              Masuk Pedagang
+            </Link>
           )}
+
+          <Link
+            href="/explore"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#006194] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#007bb9] active:scale-[0.98]"
+          >
+            <Compass className="h-4 w-4" />
+            <span className="sm:hidden">Peta Live</span>
+            <span className="hidden sm:inline">Buka Peta Live</span>
+          </Link>
+
+          {/* Tombol menu (mobile) */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Buka menu"
+            className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#bfc7d2]/40 text-[#0d1c2e] hover:bg-[#eff4ff] transition-colors"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
       </div>
+
+      {/* Menu mobile: turun dari atas */}
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent
+          side="top"
+          showCloseButton={false}
+          className="md:hidden gap-0 p-0 bg-white rounded-b-2xl border-[#dce9ff] shadow-xl"
+        >
+          <SheetTitle className="sr-only">Menu navigasi</SheetTitle>
+          <SheetDescription className="sr-only">
+            Tautan ke bagian-bagian JejakLapak
+          </SheetDescription>
+
+          <div className="flex h-16 items-center justify-between px-4 border-b border-[#dce9ff]">
+            <Image
+              src="/logo.png"
+              alt="JejakLapak"
+              width={145}
+              height={36}
+              style={{ width: "auto" }}
+              className="h-8 object-contain"
+            />
+            <button
+              type="button"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Tutup menu"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#0d1c2e] hover:bg-[#eff4ff] transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <nav className="flex flex-col p-3">
+            {NAV_ITEMS.map(({ label, href, icon: Icon }) => (
+              <Link
+                key={label}
+                href={href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo(href);
+                }}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] font-semibold text-[#0d1c2e] hover:bg-[#eff4ff] transition-colors"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e6eeff] text-[#006194]">
+                  <Icon className="h-[18px] w-[18px]" />
+                </span>
+                {label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex flex-col gap-2 border-t border-[#dce9ff] p-4">
+            <Link
+              href="/explore"
+              onClick={(e) => {
+                e.preventDefault();
+                goTo("/explore");
+              }}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#006194] text-sm font-semibold text-white hover:bg-[#007bb9] transition-colors"
+            >
+              <Compass className="h-4 w-4" />
+              Buka Peta Live
+            </Link>
+
+            {currentUser ? (
+              <Link
+                href={dashboardHref}
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo(dashboardHref);
+                }}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#bfc7d2]/60 text-sm font-semibold text-[#0d1c2e] hover:bg-[#eff4ff] transition-colors"
+              >
+                <LayoutDashboard className="h-4 w-4 text-[#006194]" />
+                {currentUser.role === "ADMIN" ? "Dashboard Admin" : "Dashboard Pedagang"}
+              </Link>
+            ) : (
+              <Link
+                href="/merchant/login"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goTo("/merchant/login");
+                }}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#bfc7d2]/60 text-sm font-semibold text-[#0d1c2e] hover:bg-[#eff4ff] transition-colors"
+              >
+                <Store className="h-4 w-4 text-[#006194]" />
+                Masuk Pedagang
+              </Link>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }

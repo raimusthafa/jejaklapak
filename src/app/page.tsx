@@ -13,8 +13,13 @@ import {
   Heart,
   Plus,
   Minus,
-  ShieldCheck,
   Bike,
+  MapPin,
+  Users,
+  Megaphone,
+  Smartphone,
+  BadgePercent,
+  ArrowRight,
 } from "lucide-react";
 
 const LandingMapPreview = dynamic(
@@ -35,33 +40,8 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col w-full bg-[#f8f9ff] text-[#0d1c2e] antialiased">
-      {/* 1. Top Utility Announcement & Telemetry Bar */}
-      <section className="w-full bg-[#dce9ff] py-2.5 px-4 lg:px-8 border-b border-[#bfc7d2]/30">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#3f4850] font-medium">
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#79d8fd] text-[#005e77] text-[11px] font-bold uppercase tracking-wider">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#006781] animate-ping"></span>
-              Live Sync
-            </span>
-            <span className="text-xs sm:text-sm text-[#0d1c2e]">
-              Koridor Dago, Dipatiukur, Riau, Braga &amp; Lengkong aktif terpantau
-            </span>
-          </div>
-          <div className="hidden sm:flex items-center gap-4 text-xs font-medium text-[#3f4850]">
-            <span className="flex items-center gap-1.5">
-              <Zap className="h-3.5 w-3.5 text-[#006781]" />
-              Pembaruan latensi &lt; 8 detik
-            </span>
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-[#006781]" />
-              Data GPS OpenStreetMap
-            </span>
-          </div>
-        </div>
-      </section>
-
       {/* 2. Hero Section with Dual Spatial Layout */}
-      <section className="w-full py-12 lg:py-20 px-4 lg:px-8 bg-[#f8f9ff]">
+      <section id="beranda" className="w-full py-12 lg:py-20 px-4 lg:px-8 bg-[#f8f9ff] scroll-mt-16">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Left Narrative Column */}
           <div className="lg:col-span-6 flex flex-col items-start gap-4">
@@ -72,7 +52,7 @@ export default function HomePage() {
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0d1c2e] tracking-tight leading-[1.15]">
               Temukan &amp; Pantau <br className="hidden sm:inline" />
-              <span className="text-[#006194] underline decoration-[#79d8fd] decoration-4 underline-offset-8">
+              <span className="text-[#006194] whitespace-nowrap underline decoration-[#79d8fd] decoration-2 sm:decoration-4 underline-offset-4 sm:underline-offset-8">
                 UMKM Keliling
               </span>{" "}
               Favoritmu di Bandung
@@ -351,8 +331,64 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* About Us */}
+      <section id="tentang-kami" className="w-full py-16 lg:py-24 px-4 lg:px-8 bg-white scroll-mt-16">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+          <div className="lg:col-span-6">
+            <span className="text-xs text-[#006194] uppercase tracking-widest font-bold">
+              tentang kami
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#0d1c2e] mt-1">
+              Tentang JejakLapak
+            </h2>
+            <p className="text-sm sm:text-base text-[#3f4850] mt-4 leading-relaxed">
+              JejakLapak adalah platform pemetaan real-time untuk pedagang UMKM keliling di Bandung Raya. Kami membantu pembeli menemukan gerobak jajanan, pikulan kuliner, dan jasa keliling favorit tanpa harus menebak-nebak lewat mana mereka hari ini.
+            </p>
+            <p className="text-sm sm:text-base text-[#3f4850] mt-3 leading-relaxed">
+              Di sisi lain, kami memberi pedagang kecil cara sederhana untuk dikenal lebih luas: cukup bagikan posisi dari ponsel, tanpa aplikasi berat dan tanpa potongan komisi.
+            </p>
+          </div>
+
+          <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
+            <div className="flex items-start gap-4 bg-[#eff4ff] rounded-xl p-5 border border-[#dce9ff]">
+              <div className="w-10 h-10 shrink-0 rounded-lg bg-[#006194] text-white flex items-center justify-center">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#0d1c2e]">Misi</h3>
+                <p className="text-sm text-[#3f4850] mt-1 leading-relaxed">
+                  Membuat pedagang keliling mudah ditemukan, kapan pun dan di mana pun mereka mangkal.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4 bg-[#eff4ff] rounded-xl p-5 border border-[#dce9ff]">
+              <div className="w-10 h-10 shrink-0 rounded-lg bg-[#006781] text-white flex items-center justify-center">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#0d1c2e]">Transparan</h3>
+                <p className="text-sm text-[#3f4850] mt-1 leading-relaxed">
+                  Setiap lokasi mencantumkan waktu pembaruan terakhir, jadi informasinya bisa dipercaya.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-4 bg-[#eff4ff] rounded-xl p-5 border border-[#dce9ff]">
+              <div className="w-10 h-10 shrink-0 rounded-lg bg-[#c05400] text-white flex items-center justify-center">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#0d1c2e]">Untuk Komunitas</h3>
+                <p className="text-sm text-[#3f4850] mt-1 leading-relaxed">
+                  Dibangun untuk warga dan pedagang lokal Bandung, bukan untuk mengambil untung dari mereka.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 4. Bagian 'Cara Kerja' (3 Langkah Ringkas) */}
-      <section className="w-full py-16 lg:py-24 px-4 lg:px-8 bg-[#f8f9ff]">
+      <section id="cara-kerja" className="w-full py-16 lg:py-24 px-4 lg:px-8 bg-[#f8f9ff] scroll-mt-16">
         <div className="max-w-7xl mx-auto flex flex-col gap-12">
           <div className="text-center max-w-2xl mx-auto">
             <span className="text-xs text-[#006194] uppercase tracking-widest font-bold">
@@ -468,6 +504,89 @@ export default function HomePage() {
               <p className="text-sm text-[#3f4850] leading-relaxed">
                 Platform murni nirlaba komersial untuk pedagang kecil. Nol komisi potongan pesanan, menjaga ekosistem gerobak jalanan tetap mandiri.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Untuk Pedagang UMKM */}
+      <section id="untuk-pedagang" className="w-full py-16 lg:py-24 px-4 lg:px-8 bg-[#f8f9ff] scroll-mt-16">
+        <div className="max-w-7xl mx-auto flex flex-col gap-10">
+          <div className="max-w-2xl">
+            <span className="text-xs text-[#006194] uppercase tracking-widest font-bold">
+              Untuk Pedagang UMKM
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#0d1c2e] mt-1">
+              Daftarkan lapakmu, jangkau lebih banyak pembeli
+            </h2>
+            <p className="text-sm sm:text-base text-[#3f4850] mt-2">
+              Gabung gratis dan biarkan pembeli di sekitarmu tahu kapan dan di mana kamu berjualan.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl p-6 border border-[#dce9ff] shadow-xs flex flex-col gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[#006194] text-white flex items-center justify-center">
+                <Megaphone className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-[#0d1c2e]">Grup Promosi Gratis</h3>
+              <p className="text-sm text-[#3f4850] leading-relaxed">
+                Lapakmu ikut dipromosikan lewat grup komunitas JejakLapak tanpa biaya iklan.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-[#dce9ff] shadow-xs flex flex-col gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[#006781] text-white flex items-center justify-center">
+                <Smartphone className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-[#0d1c2e]">Kelola Status Lewat HP</h3>
+              <p className="text-sm text-[#3f4850] leading-relaxed">
+                Ubah status standby atau keliling dalam sekali ketuk, langsung dari ponselmu.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-[#dce9ff] shadow-xs flex flex-col gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[#c05400] text-white flex items-center justify-center">
+                <BadgePercent className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-[#0d1c2e]">Tanpa Potongan Komisi</h3>
+              <p className="text-sm text-[#3f4850] leading-relaxed">
+                Seluruh hasil penjualan tetap untukmu. Tidak ada potongan dari setiap pesanan.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-[#dce9ff] shadow-xs flex flex-col gap-3">
+              <div className="w-10 h-10 rounded-lg bg-[#006194] text-white flex items-center justify-center">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-[#0d1c2e]">Terlihat di Peta</h3>
+              <p className="text-sm text-[#3f4850] leading-relaxed">
+                Pembeli di sekitarmu bisa melihat posisi gerobakmu secara real-time.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-[#006194] p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div>
+              <h3 className="text-lg sm:text-xl font-bold text-white">Siap tampil di peta?</h3>
+              <p className="text-sm text-white/80 mt-1">
+                Pendaftaran gratis dan hanya butuh beberapa menit.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/merchant/register"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white text-[#006194] font-semibold text-sm hover:bg-[#eff4ff] transition-colors"
+              >
+                Daftarkan Lapak
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/merchant/login"
+                className="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-white/40 text-white font-semibold text-sm hover:bg-white/10 transition-colors"
+              >
+                Sudah punya akun? Masuk
+              </Link>
             </div>
           </div>
         </div>
