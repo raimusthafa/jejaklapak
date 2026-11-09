@@ -303,12 +303,12 @@ export default function AdminDashboardClient({
                   {adminUser.role}
                 </span>
               </div>
-              <p className="text-xs text-[#3f4850] mt-0.5">
+              {/* <p className="text-xs text-[#3f4850] mt-0.5">
                 Data langsung dari PostgreSQL · Masuk sebagai{" "}
                 <span className="font-semibold text-[#0d1c2e]">
                   {adminUser.email}
                 </span>
-              </p>
+              </p> */}
             </div>
           </div>
 
