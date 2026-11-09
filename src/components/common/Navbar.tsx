@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   Compass,
-  LogOut,
   Menu,
   X,
   House,
@@ -22,7 +21,6 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { createClient } from "@/lib/supabase/client";
-import { logoutAction } from "@/actions/auth";
 
 interface AuthUserData {
   id: string;
@@ -44,7 +42,6 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<AuthUserData | null>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -52,7 +49,7 @@ export function Navbar() {
     const supabase = createClient();
 
     const loadUser = () => {
-      fetch("/api/auth/me")
+      fetch("/api/auth/me", { cache: "no-store" })
         .then((res) => (res.ok ? res.json() : { user: null }))
         .then((json) => {
           if (isMounted) {
@@ -68,29 +65,29 @@ export function Navbar() {
 
     loadUser();
 
+    const handleAuthChanged = () => {
+      loadUser();
+    };
+
+    window.addEventListener("jejaklapak-auth-changed", handleAuthChanged);
+    window.addEventListener("focus", handleAuthChanged);
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT" && isMounted) {
+        setCurrentUser(null);
+      }
       loadUser();
     });
 
     return () => {
       isMounted = false;
+      window.removeEventListener("jejaklapak-auth-changed", handleAuthChanged);
+      window.removeEventListener("focus", handleAuthChanged);
       subscription.unsubscribe();
     };
-  }, []);
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logoutAction();
-      setCurrentUser(null);
-      router.push("/merchant/login");
-      router.refresh();
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
+  }, [pathname]);
 
   const goTo = (href: string) => {
     setMenuOpen(false);
@@ -143,38 +140,22 @@ export function Navbar() {
         {/* Aksi */}
         <div className="ml-auto flex items-center gap-2">
           {currentUser ? (
-            <>
-              <Link
-                href={dashboardHref}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#eff4ff] border border-[#dce9ff] hover:bg-[#dce9ff] transition"
-              >
-                <div className="h-7 w-7 rounded-lg bg-[#cce5ff] text-[#006194] flex items-center justify-center font-bold text-xs uppercase">
-                  {currentUser.name.charAt(0)}
-                </div>
-                <div className="flex flex-col text-left leading-tight">
-                  <span className="text-xs font-bold text-[#0d1c2e] line-clamp-1 max-w-[120px]">
-                    {currentUser.name}
-                  </span>
-                  <span className="text-[10px] font-medium text-[#006781] uppercase tracking-wider">
-                    {currentUser.role === "ADMIN" ? "Admin" : "Dashboard"}
-                  </span>
-                </div>
-              </Link>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-medium text-[#3f4850] hover:bg-[#ffdad6]/40 hover:text-[#ba1a1a] transition-colors"
-                title="Keluar dari akun"
-                aria-label="Keluar dari akun"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">
-                  {isLoggingOut ? "Keluar..." : "Keluar"}
+            <Link
+              href={dashboardHref}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#eff4ff] border border-[#dce9ff] hover:bg-[#dce9ff] transition"
+            >
+              <div className="h-7 w-7 rounded-lg bg-[#cce5ff] text-[#006194] flex items-center justify-center font-bold text-xs uppercase">
+                {currentUser.name.charAt(0)}
+              </div>
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-xs font-bold text-[#0d1c2e] line-clamp-1 max-w-[120px]">
+                  {currentUser.name}
                 </span>
-              </button>
-            </>
+                <span className="text-[10px] font-medium text-[#006781] uppercase tracking-wider">
+                  {currentUser.role === "ADMIN" ? "Admin" : "Dashboard"}
+                </span>
+              </div>
+            </Link>
           ) : (
             <Link
               href="/merchant/login"

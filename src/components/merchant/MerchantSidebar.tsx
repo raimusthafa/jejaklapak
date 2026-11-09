@@ -14,11 +14,11 @@ import {
   LogOut,
   PanelLeftClose,
   X,
-  MapPin,
   Pause,
   Power,
 } from "lucide-react";
-import { logoutAction } from "@/actions/auth";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "@/components/ui/sonner";
 import { SellingStatus } from "@/types/merchant";
 import { AuthUser } from "@/server/auth";
 
@@ -51,10 +51,32 @@ export function MerchantSidebar({
     if (!confirm("Apakah Anda yakin ingin keluar dari akun pedagang?")) return;
     setIsLoggingOut(true);
     try {
-      await logoutAction();
-      router.push("/merchant/login");
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+
+      if (!res.ok) {
+        throw new Error(`Logout gagal (${res.status})`);
+      }
+
+      try {
+        const supabase = createClient();
+        await supabase.auth.signOut({ scope: "local" });
+      } catch (clientSignOutErr) {
+        console.warn("Browser signOut notice:", clientSignOutErr);
+      }
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jejaklapak-auth-changed"));
+      }
+
+      router.replace("/merchant/login");
+      router.refresh();
     } catch (err) {
       console.error("Gagal logout:", err);
+      toast.error("Gagal keluar dari akun. Silakan coba lagi.");
       setIsLoggingOut(false);
     }
   };

@@ -58,6 +58,11 @@ export async function updateSession(request: NextRequest) {
 
   // 1. Belum login mencoba akses area terproteksi -> redirect ke login
   if (!user && (isProtectedMerchantRoute || isAdminRoute)) {
+    // Jangan kirim HTTP 307 redirect HTML untuk request Server Action (POST Next-Action),
+    // agar guard server action (requireUser/requireMerchant) mengirim redirect RSC yang valid.
+    if (request.method === "POST" && request.headers.has("next-action")) {
+      return response;
+    }
     const loginUrl = new URL("/merchant/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
