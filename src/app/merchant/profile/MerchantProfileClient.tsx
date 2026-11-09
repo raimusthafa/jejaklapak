@@ -80,11 +80,13 @@ export default function MerchantProfileClient({
 
   useEffect(() => {
     async function fetchMerchantData() {
-      const targetId = user?.merchantId || user?.merchantSlug;
+      const targetId = initialMerchant?.id || user?.merchantId || user?.merchantSlug;
       if (!targetId) return;
 
       try {
-        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`);
+        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`, {
+          cache: "no-store",
+        });
         if (res.ok) {
           const json = await res.json();
           if (json.ok && json.data) {
@@ -179,6 +181,8 @@ export default function MerchantProfileClient({
       toast.error(result.message || "Gagal memperbarui profil.");
     }
   };
+
+  const codeTracker = `BDG-${merchantId.slice(-4).toUpperCase()}`;
 
   return (
     <div className="min-h-screen bg-[#f4f8fb] text-slate-800 flex">

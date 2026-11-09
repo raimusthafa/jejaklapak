@@ -62,6 +62,8 @@ export async function updateMerchantProfileAction(
     const updated = await updateMerchantProfile(merchantId, parsed.data);
     revalidatePath("/merchant/profile");
     revalidatePath("/merchant/dashboard");
+    revalidatePath("/merchant/menu");
+    revalidatePath("/merchant/schedule");
     revalidatePath(`/merchant/${merchantId}`);
     revalidatePath("/explore");
 
@@ -140,6 +142,9 @@ export async function toggleSellingSessionAction(
   try {
     await updateSellingSession(merchantId, action);
     revalidatePath("/merchant/dashboard");
+    revalidatePath("/merchant/menu");
+    revalidatePath("/merchant/profile");
+    revalidatePath("/merchant/schedule");
     revalidatePath("/explore");
 
     return {

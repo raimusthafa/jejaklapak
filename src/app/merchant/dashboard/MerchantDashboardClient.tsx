@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { merchantService, calculateFreshness } from "@/services/mock/merchantService";
 import { toggleSellingSessionAction, toggleMenuItemAvailabilityAction } from "@/actions/merchant";
@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Share2,
   ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import { AuthUser } from "@/server/auth";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
@@ -81,6 +82,10 @@ export default function MerchantDashboardClient({
   const [manualLng, setManualLng] = useState(defaultMerchant.location.longitude.toString());
   const [isPending, setIsPending] = useState(false);
   const [isRefreshingGps, setIsRefreshingGps] = useState(false);
+  const [focusLocation, setFocusLocation] = useState<{
+    coords: [number, number];
+    id: number;
+  } | null>(null);
 
   // Sync merchant with live database on mount
   useEffect(() => {
@@ -89,7 +94,9 @@ export default function MerchantDashboardClient({
       if (!targetId) return;
 
       try {
-        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`);
+        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`, {
+          cache: "no-store",
+        });
         if (res.ok) {
           const json = await res.json();
           if (json.ok && json.data) {
@@ -110,8 +117,10 @@ export default function MerchantDashboardClient({
   // Hook Pelacak GPS Otomatis (Fase 3)
   const {
     coords: liveCoords,
+    browserCoords,
     accuracy: liveAccuracy,
     lastSentAt: liveLastSentAt,
+    gpsError,
     setManualCoords,
     sendCurrentLocation,
   } = useMerchantLocationTracker({
@@ -124,8 +133,42 @@ export default function MerchantDashboardClient({
   const activeCapturedAt = liveLastSentAt || lastCapturedAt;
   const freshness = calculateFreshness(activeCapturedAt);
 
-  const displayLat = liveCoords ? liveCoords.latitude : merchant.location.latitude;
-  const displayLng = liveCoords ? liveCoords.longitude : merchant.location.longitude;
+  // Bedakan lokasi asli yang tersimpan di DB vs koordinat fallback default Bandung
+  const hasSavedLocation = Boolean(merchant.location.id && merchant.location.id !== merchant.id);
+
+  const displayLat = liveCoords
+    ? liveCoords.latitude
+    : !hasSavedLocation && browserCoords
+    ? browserCoords.latitude
+    : merchant.location.latitude;
+  const displayLng = liveCoords
+    ? liveCoords.longitude
+    : !hasSavedLocation && browserCoords
+    ? browserCoords.longitude
+    : merchant.location.longitude;
+
+  const userLocation = useMemo<[number, number] | null>(
+    () => (browserCoords ? [browserCoords.longitude, browserCoords.latitude] : null),
+    [browserCoords]
+  );
+
+  const dashboardMerchants = useMemo(
+    () => [
+      {
+        ...merchant,
+        sellingStatus: status,
+        location: {
+          ...merchant.location,
+          latitude: displayLat,
+          longitude: displayLng,
+        },
+      },
+    ],
+    [merchant, status, displayLat, displayLng]
+  );
+
+  const effectiveAccuracy =
+    liveAccuracy ?? (hasSavedLocation ? merchant.location.accuracyMeters : null);
 
   const showToast = (msg: string, type: "success" | "error" | "info" = "success") => {
     if (type === "error") {
@@ -188,11 +231,32 @@ export default function MerchantDashboardClient({
 
   const handleRefreshGps = async () => {
     setIsRefreshingGps(true);
-    await sendCurrentLocation();
-    setTimeout(() => {
-      setIsRefreshingGps(false);
-      showToast("Titik lokasi GPS berhasil dicocokkan ulang ke satelit!");
-    }, 700);
+    const result = await sendCurrentLocation();
+    setIsRefreshingGps(false);
+
+    if (result.ok && result.latitude !== undefined && result.longitude !== undefined) {
+      const lat = result.latitude;
+      const lng = result.longitude;
+      const capturedAt = result.capturedAt || new Date().toISOString();
+      setLastCapturedAt(capturedAt);
+      setManualLat(lat.toFixed(6));
+      setManualLng(lng.toFixed(6));
+      setMerchant((prev) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          id: "live-gps",
+          latitude: lat,
+          longitude: lng,
+          accuracyMeters: result.accuracy ?? prev.location.accuracyMeters,
+          capturedAt,
+        },
+      }));
+      setFocusLocation({ coords: [lng, lat], id: Date.now() });
+      showToast("Titik lokasi GPS berhasil diperbarui sesuai lokasi perangkat Anda!");
+    } else {
+      showToast(result.message || "Gagal mengambil lokasi GPS perangkat.", "error");
+    }
   };
 
   const handleSaveManualCoords = async (e: React.FormEvent) => {
@@ -201,11 +265,33 @@ export default function MerchantDashboardClient({
     const lng = parseFloat(manualLng);
 
     if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      showToast("Koordinat tidak valid! Harap masukkan angka latitude & longitude yang benar.");
+      showToast(
+        "Koordinat tidak valid! Harap masukkan angka latitude & longitude yang benar.",
+        "error"
+      );
       return;
     }
 
-    await setManualCoords(lat, lng);
+    const result = await setManualCoords(lat, lng);
+    if (!result.ok) {
+      showToast(result.message || "Gagal menyimpan koordinat pangkalan.", "error");
+      return;
+    }
+
+    const capturedAt = result.capturedAt || new Date().toISOString();
+    setLastCapturedAt(capturedAt);
+    setMerchant((prev) => ({
+      ...prev,
+      location: {
+        ...prev.location,
+        id: "manual-gps",
+        latitude: lat,
+        longitude: lng,
+        accuracyMeters: 5,
+        capturedAt,
+      },
+    }));
+    setFocusLocation({ coords: [lng, lat], id: Date.now() });
     setShowManualModal(false);
     showToast("Titik lokasi pangkalan berhasil diperbarui secara manual!");
   };
@@ -466,7 +552,11 @@ export default function MerchantDashboardClient({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowManualModal(true)}
+                  onClick={() => {
+                    setManualLat(displayLat.toFixed(6));
+                    setManualLng(displayLng.toFixed(6));
+                    setShowManualModal(true);
+                  }}
                   className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                 >
                   Ubah Manual
@@ -486,33 +576,40 @@ export default function MerchantDashboardClient({
             {/* Peta Interaktif MapLibre Viewport */}
             <div className="relative w-full h-[420px] rounded-xl overflow-hidden border border-slate-200 shadow-inner">
               <MaplibreView
-                merchants={[
-                  {
-                    ...merchant,
-                    location: {
-                      ...merchant.location,
-                      latitude: displayLat,
-                      longitude: displayLng,
-                    },
-                  },
-                ]}
+                merchants={dashboardMerchants}
                 selectedMerchantId={null}
                 onSelectMerchant={() => {}}
-                userLocation={[displayLng, displayLat]}
+                userLocation={userLocation}
+                focusLocation={focusLocation}
               />
 
               {/* Bottom Floating Telemetry Bar */}
-              <div className="absolute bottom-3 left-3 right-3 z-20 bg-white/95 backdrop-blur-sm p-3 rounded-xl border border-slate-200/90 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span className="text-xs font-semibold text-slate-700">
-                    {status === "ACTIVE"
-                      ? "Sinyal GPS Terbuka & Aktif ke calon pembeli"
-                      : "Sesi offline. Aktifkan sesi untuk memancarkan posisi"}
-                  </span>
+              <div className="absolute bottom-3 left-3 right-3 z-20 bg-white/95 backdrop-blur-sm p-3 rounded-xl border border-slate-200/90 flex items-center justify-between gap-2 shadow-sm">
+                <div className="flex items-center gap-2 min-w-0">
+                  {gpsError ? (
+                    <>
+                      <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                      <span className="text-xs font-semibold text-amber-800 truncate">
+                        {gpsError}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span className="text-xs font-semibold text-slate-700 truncate">
+                        {status === "ACTIVE"
+                          ? "Sinyal GPS Terbuka & Aktif ke calon pembeli"
+                          : "Sesi offline. Aktifkan sesi untuk memancarkan posisi"}
+                      </span>
+                    </>
+                  )}
                 </div>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                  Akurasi: ±{Math.round(liveAccuracy || 6)}m
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 shrink-0">
+                  {effectiveAccuracy === null
+                    ? "Menunggu GPS..."
+                    : effectiveAccuracy >= 1000
+                    ? `Akurasi: ±${(effectiveAccuracy / 1000).toFixed(1)} km`
+                    : `Akurasi: ±${Math.round(effectiveAccuracy)}m`}
                 </span>
               </div>
             </div>

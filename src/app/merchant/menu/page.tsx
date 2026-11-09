@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { requireMerchant } from "@/server/auth";
-import { getMerchantMenuItems } from "@/server/merchants";
+import { getMerchantForUser, getMerchantMenuItems } from "@/server/merchants";
 import MerchantMenuClient from "./MerchantMenuClient";
 
 export const instant = false;
@@ -9,10 +9,18 @@ export const instant = false;
 async function MerchantMenuLoader() {
   await connection();
   const user = await requireMerchant();
-  const initialItems = user.merchantId
-    ? await getMerchantMenuItems(user.merchantId)
+  const initialMerchant = await getMerchantForUser(user);
+  const resolvedMerchantId = initialMerchant?.id || user.merchantId;
+  const initialItems = resolvedMerchantId
+    ? await getMerchantMenuItems(resolvedMerchantId)
     : [];
-  return <MerchantMenuClient user={user} initialItems={initialItems} />;
+  return (
+    <MerchantMenuClient
+      user={user}
+      initialMerchant={initialMerchant}
+      initialItems={initialItems}
+    />
+  );
 }
 
 export default function MerchantMenuPage() {

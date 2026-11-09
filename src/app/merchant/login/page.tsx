@@ -5,7 +5,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Store,
   Lock,
   Mail,
   ArrowRight,
@@ -57,6 +56,9 @@ function LoginForm() {
       toast.success(state.message || "Login berhasil! Mengarahkan ke dashboard...", {
         id: "login-status",
       });
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jejaklapak-auth-changed"));
+      }
       const destination = redirectParam || state.redirectTo || "/merchant/dashboard";
       const timer = setTimeout(() => {
         router.push(destination);

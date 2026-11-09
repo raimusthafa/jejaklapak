@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { requireMerchant } from "@/server/auth";
-import { getMerchantSchedules } from "@/server/merchants";
+import { getMerchantForUser, getMerchantSchedules } from "@/server/merchants";
 import MerchantScheduleClient from "./MerchantScheduleClient";
 
 export const instant = false;
@@ -9,10 +9,18 @@ export const instant = false;
 async function MerchantScheduleLoader() {
   await connection();
   const merchantUser = await requireMerchant();
-  const schedules = merchantUser.merchantId
-    ? await getMerchantSchedules(merchantUser.merchantId)
+  const initialMerchant = await getMerchantForUser(merchantUser);
+  const resolvedMerchantId = initialMerchant?.id || merchantUser.merchantId;
+  const schedules = resolvedMerchantId
+    ? await getMerchantSchedules(resolvedMerchantId)
     : [];
-  return <MerchantScheduleClient user={merchantUser} initialSchedules={schedules} />;
+  return (
+    <MerchantScheduleClient
+      user={merchantUser}
+      initialMerchant={initialMerchant}
+      initialSchedules={schedules}
+    />
+  );
 }
 
 export default function MerchantSchedulePage() {

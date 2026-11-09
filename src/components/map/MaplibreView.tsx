@@ -28,6 +28,7 @@ export interface MaplibreViewProps {
   is3D?: boolean;
   followCamera?: boolean;
   userLocation?: LngLat | null;
+  focusLocation?: { coords: LngLat; id: number } | null;
   zoomAction?: { type: "in" | "out"; id: number } | null;
 }
 
@@ -41,6 +42,7 @@ export default function MaplibreView({
   is3D = false,
   followCamera = false,
   userLocation = null,
+  focusLocation = null,
   zoomAction = null,
 }: MaplibreViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -188,6 +190,8 @@ export default function MaplibreView({
     merchants.forEach((merchant) => {
       activeMerchantIds.add(merchant.id);
       const isSelected = merchant.id === selectedMerchantId;
+      const isMoving = (merchant.location.speedKmh ?? 0) > 1 ? 1 : 0;
+      const visualKey = `${isSelected}|${merchant.sellingStatus}|${merchant.iconEmoji || "🍲"}|${merchant.name}|${isMoving}`;
       const coords: [number, number] = [
         merchant.location.longitude,
         merchant.location.latitude,
@@ -196,8 +200,8 @@ export default function MaplibreView({
       const existingMarker = currentMarkerMap.get(merchant.id);
 
       if (existingMarker) {
-        const prevSelected = (existingMarker as unknown as { _isSelected?: boolean })._isSelected;
-        if (prevSelected !== isSelected) {
+        const prevVisualKey = (existingMarker as unknown as { _visualKey?: string })._visualKey;
+        if (prevVisualKey !== visualKey) {
           existingMarker.remove();
           const markerEl = createVendorMarkerElement(
             merchant,
@@ -209,7 +213,7 @@ export default function MaplibreView({
           const newMarker = new maplibregl.Marker({ element: markerEl })
             .setLngLat(coords)
             .addTo(map);
-          (newMarker as unknown as { _isSelected: boolean })._isSelected = isSelected;
+          (newMarker as unknown as { _visualKey: string })._visualKey = visualKey;
           currentMarkerMap.set(merchant.id, newMarker);
         } else {
           existingMarker.setLngLat(coords);
@@ -225,7 +229,7 @@ export default function MaplibreView({
         const newMarker = new maplibregl.Marker({ element: markerEl })
           .setLngLat(coords)
           .addTo(map);
-        (newMarker as unknown as { _isSelected: boolean })._isSelected = isSelected;
+        (newMarker as unknown as { _visualKey: string })._visualKey = visualKey;
         currentMarkerMap.set(merchant.id, newMarker);
       }
     });
@@ -272,7 +276,8 @@ export default function MaplibreView({
     if (userLocation) {
       if (!userMarkerRef.current) {
         const userEl = document.createElement("div");
-        userEl.className = "relative flex items-center justify-center";
+        userEl.style.zIndex = "5";
+        userEl.style.pointerEvents = "none";
         userEl.innerHTML = `
           <span class="absolute h-8 w-8 rounded-full bg-[#006781]/40 animate-ping"></span>
           <div class="h-6 w-6 rounded-full bg-[#006194] border-2 border-white shadow-md flex items-center justify-center">
@@ -297,6 +302,19 @@ export default function MaplibreView({
       userMarkerRef.current = null;
     }
   }, [userLocation, mapLoaded]);
+
+  // ── 9. Focus Camera Pan (manual / GPS refresh action) ────────────────
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !mapLoaded || !focusLocation) return;
+
+    map.flyTo({
+      center: focusLocation.coords,
+      zoom: Math.max(map.getZoom(), 15),
+      essential: true,
+      duration: 1000,
+    });
+  }, [focusLocation, mapLoaded]);
 
   return (
     <div className="relative w-full h-full min-h-[400px] overflow-hidden bg-[#e5ece9]">

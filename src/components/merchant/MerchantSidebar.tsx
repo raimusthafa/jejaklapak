@@ -14,11 +14,11 @@ import {
   LogOut,
   PanelLeftClose,
   X,
-  MapPin,
   Pause,
   Power,
 } from "lucide-react";
-import { logoutAction } from "@/actions/auth";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "@/components/ui/sonner";
 import { SellingStatus } from "@/types/merchant";
 import { AuthUser } from "@/server/auth";
 import { MerchantAvatar } from "@/components/common/MerchantAvatar";
@@ -45,6 +45,11 @@ export function MerchantSidebar({
   sellingStatus = "ACTIVE",
   trackerCode = "BDG-0100",
 }: MerchantSidebarProps) {
+  const resolvedTrackerCode =
+    trackerCode ||
+    (user?.merchantId
+      ? `BDG-${user.merchantId.slice(-4).toUpperCase()}`
+      : "BDG-0000");
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -53,10 +58,32 @@ export function MerchantSidebar({
     if (!confirm("Apakah Anda yakin ingin keluar dari akun pedagang?")) return;
     setIsLoggingOut(true);
     try {
-      await logoutAction();
-      router.push("/merchant/login");
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+
+      if (!res.ok) {
+        throw new Error(`Logout gagal (${res.status})`);
+      }
+
+      try {
+        const supabase = createClient();
+        await supabase.auth.signOut({ scope: "local" });
+      } catch (clientSignOutErr) {
+        console.warn("Browser signOut notice:", clientSignOutErr);
+      }
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jejaklapak-auth-changed"));
+      }
+
+      router.replace("/merchant/login");
+      router.refresh();
     } catch (err) {
       console.error("Gagal logout:", err);
+      toast.error("Gagal keluar dari akun. Silakan coba lagi.");
       setIsLoggingOut(false);
     }
   };
@@ -168,7 +195,7 @@ export function MerchantSidebar({
               />
               <div className="min-w-0 flex-1">
                 <h2 className="text-xs font-bold text-slate-900 truncate">{merchantName}</h2>
-                <p className="text-[11px] text-slate-500 font-medium">#{trackerCode}</p>
+                <p className="text-[11px] text-slate-500 font-medium">#{resolvedTrackerCode}</p>
               </div>
             </div>
 

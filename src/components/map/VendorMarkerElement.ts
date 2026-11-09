@@ -9,8 +9,8 @@ export function createVendorMarkerElement(
   onDeselect?: () => void
 ): HTMLElement {
   const el = document.createElement("div");
-  el.className = "cursor-pointer group select-none relative";
-  el.style.transform = "translate(-50%, -50%)";
+  el.className = "cursor-pointer group select-none";
+  el.style.zIndex = isSelected ? "30" : "20";
 
   const isLive = merchant.sellingStatus === "ACTIVE";
   const isPaused = merchant.sellingStatus === "PAUSED";
@@ -56,7 +56,7 @@ export function createVendorMarkerElement(
     ? isSelected
       ? "border-[#994100] ring-4 ring-[#ffdbca] bg-white"
       : "border-[#994100] bg-white"
-    : "border-slate-400 bg-white opacity-80";
+    : "border-slate-400 bg-white";
 
   pin.className = `relative flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all shadow-md ${borderColor}`;
 

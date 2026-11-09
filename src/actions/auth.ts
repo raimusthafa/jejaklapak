@@ -4,6 +4,8 @@ import { loginSchema, registerMerchantSchema } from "@/schemas/auth";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export type ActionState = {
   ok: boolean;
@@ -301,13 +303,25 @@ export async function registerMerchantAction(
   }
 }
 
-export async function logoutAction(): Promise<ActionState> {
+export async function logoutAction(): Promise<never> {
   try {
     const supabase = await createClient();
-    await supabase.auth.signOut();
-    revalidatePath("/", "layout");
-    return { ok: true, redirectTo: "/merchant/login" };
+    await supabase.auth.signOut({ scope: "local" });
   } catch {
-    return { ok: true, redirectTo: "/merchant/login" };
+    // Tetap lanjut bersihkan cookie lokal meskipun signOut remote gagal
   }
+
+  try {
+    const cookieStore = await cookies();
+    for (const c of cookieStore.getAll()) {
+      if (c.name.startsWith("sb-") && c.name.includes("-auth-token")) {
+        cookieStore.delete(c.name);
+      }
+    }
+  } catch {
+    // Abaikan jika gagal menghapus cookie
+  }
+
+  revalidatePath("/", "layout");
+  redirect("/merchant/login");
 }
