@@ -47,6 +47,55 @@ async function resolveMerchantId(idOrSlug: string): Promise<string> {
 }
 
 /**
+ * Menentukan lapak mana yang boleh diubah oleh user.
+ * - ADMIN: boleh menunjuk lapak mana pun (memakai id yang diminta).
+ * - MERCHANT: hanya lapak miliknya. Dicari langsung di database lewat ownerId
+ *   (tidak bergantung pada session), dan id dari client hanya diterima jika memang miliknya.
+ * Status verifikasi (PENDING/VERIFIED) tidak memengaruhi hak mengubah foto.
+ */
+export async function resolveOwnedMerchantId(
+  user: { id: string; role: string; merchantId?: string | null; merchantSlug?: string | null },
+  requestedId?: string
+): Promise<string | null> {
+  if (user.role === "ADMIN") {
+    return requestedId ? await resolveMerchantId(requestedId) : null;
+  }
+
+  try {
+    const isDbLive = await isDatabaseAvailable();
+    if (isDbLive) {
+      const owned = await prisma.merchant.findMany({
+        where: { ownerId: user.id },
+        select: { id: true },
+        orderBy: { createdAt: "asc" },
+      });
+      if (requestedId && owned.some((m) => m.id === requestedId)) return requestedId;
+      if (owned.length > 0) return owned[0].id;
+      if (user.merchantId) {
+        const byId = await prisma.merchant.findUnique({
+          where: { id: user.merchantId },
+          select: { id: true },
+        });
+        if (byId) return byId.id;
+      }
+      if (user.merchantSlug) {
+        const bySlug = await prisma.merchant.findUnique({
+          where: { slug: user.merchantSlug },
+          select: { id: true },
+        });
+        if (bySlug) return bySlug.id;
+      }
+      return null;
+    }
+  } catch (err) {
+    console.warn("resolveOwnedMerchantId gagal:", err);
+  }
+
+  // Mode demo tanpa database
+  return user.merchantId ?? null;
+}
+
+/**
  * Mengambil daftar pedagang untuk peta & pencarian publik.
  */
 export async function getPublicMerchants(): Promise<Merchant[]> {

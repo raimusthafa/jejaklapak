@@ -16,6 +16,7 @@ import {
   deleteMenuItem,
   toggleMenuItemAvailability,
   setMerchantImage,
+  resolveOwnedMerchantId,
 } from "@/server/merchants";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -305,17 +306,6 @@ export async function toggleMenuItemAvailabilityAction(
   }
 }
 
-/**
- * Menentukan lapak mana yang boleh diubah fotonya.
- * Pedagang selalu memakai lapak miliknya sendiri; hanya ADMIN yang boleh menunjuk lapak lain.
- */
-function resolvePhotoTarget(
-  user: { role: string; merchantId?: string },
-  requestedMerchantId: string
-): string | null {
-  if (user.role === "ADMIN") return requestedMerchantId || null;
-  return user.merchantId ?? null;
-}
 
 function revalidateMerchantPhotoPaths() {
   revalidatePath("/merchant/profile");
@@ -334,7 +324,7 @@ export async function uploadMerchantPhotoAction(
   formData: FormData
 ): Promise<MerchantActionResult<{ url: string }>> {
   const user = await requireMerchant();
-  const targetId = resolvePhotoTarget(user, merchantId);
+  const targetId = await resolveOwnedMerchantId(user, merchantId);
   if (!targetId) {
     return { ok: false, message: "Lapak belum terdaftar untuk akun ini." };
   }
@@ -408,7 +398,7 @@ export async function removeMerchantPhotoAction(
   merchantId: string
 ): Promise<MerchantActionResult> {
   const user = await requireMerchant();
-  const targetId = resolvePhotoTarget(user, merchantId);
+  const targetId = await resolveOwnedMerchantId(user, merchantId);
   if (!targetId) {
     return { ok: false, message: "Lapak belum terdaftar untuk akun ini." };
   }
