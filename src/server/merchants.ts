@@ -777,6 +777,16 @@ export async function toggleMenuItemAvailability(
   return await updateMenuItem(menuItemId, { isAvailable });
 }
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  "Makanan Berat": "🍲",
+  "Camilan": "🍢",
+  "Camilan & Gorengan": "🍢",
+  "Minuman Segar": "🍧",
+  "Kue & Roti": "🧇",
+  "Kopi & Teh": "☕",
+  "Jajanan Tradisional": "🥟",
+};
+
 const ADMIN_DAY_NAMES = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
 const adminMerchantInclude = {

@@ -191,7 +191,7 @@ export default function MaplibreView({
       activeMerchantIds.add(merchant.id);
       const isSelected = merchant.id === selectedMerchantId;
       const isMoving = (merchant.location.speedKmh ?? 0) > 1 ? 1 : 0;
-      const visualKey = `${isSelected}|${merchant.sellingStatus}|${merchant.iconEmoji || "🍲"}|${merchant.name}|${isMoving}`;
+      const visualKey = `${isSelected}|${merchant.sellingStatus}|${merchant.category}|${merchant.name}|${merchant.location.addressHint}|${isMoving}`;
       const coords: [number, number] = [
         merchant.location.longitude,
         merchant.location.latitude,

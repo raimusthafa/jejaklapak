@@ -34,12 +34,12 @@ export default function MerchantScheduleClient({
   const [merchantMeta, setMerchantMeta] = useState<{
     name: string;
     slug?: string;
-    iconEmoji: string;
+    photoUrl?: string | null;
     sellingStatus: SellingStatus;
   }>({
     name: initialMerchant?.name || user?.merchantName || "Lapak Saya",
     slug: initialMerchant?.slug || user?.merchantSlug,
-    iconEmoji: initialMerchant?.iconEmoji || "🍲",
+    photoUrl: initialMerchant?.image ?? user?.merchantImage ?? null,
     sellingStatus: initialMerchant?.sellingStatus || "ENDED",
   });
   const [schedule, setSchedule] = useState<DaySchedule[]>(
@@ -61,12 +61,12 @@ export default function MerchantScheduleClient({
           const json = await res.json();
           if (json.ok && json.data) {
             setMerchantId(json.data.id);
-            setMerchantMeta({
+            setMerchantMeta((prev) => ({
               name: json.data.name || "Lapak Saya",
               slug: json.data.slug,
-              iconEmoji: json.data.iconEmoji || "🍲",
+              photoUrl: json.data.image !== undefined ? json.data.image : prev.photoUrl,
               sellingStatus: json.data.sellingStatus || "ENDED",
-            });
+            }));
             if (json.data.schedule && json.data.schedule.length > 0) {
               setSchedule(json.data.schedule);
             }
@@ -127,7 +127,7 @@ export default function MerchantScheduleClient({
         user={user}
         merchantName={merchantMeta.name}
         merchantSlug={merchantMeta.slug}
-        iconEmoji={merchantMeta.iconEmoji}
+        photoUrl={merchantMeta.photoUrl}
         sellingStatus={merchantMeta.sellingStatus}
         trackerCode={codeTracker}
       />

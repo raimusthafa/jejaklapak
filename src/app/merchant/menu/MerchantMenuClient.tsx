@@ -52,13 +52,13 @@ export default function MerchantMenuClient({
     id: string;
     name: string;
     slug?: string;
-    iconEmoji: string;
+    photoUrl?: string | null;
     sellingStatus: SellingStatus;
   }>({
     id: merchantId,
     name: initialMerchant?.name || user.merchantName || "Lapak Saya",
     slug: initialMerchant?.slug || user.merchantSlug,
-    iconEmoji: initialMerchant?.iconEmoji || "🍲",
+    photoUrl: initialMerchant?.image ?? user.merchantImage ?? null,
     sellingStatus: initialMerchant?.sellingStatus || "ENDED",
   });
   const [items, setItems] = useState<MenuItemData[]>(initialItems);
@@ -73,13 +73,13 @@ export default function MerchantMenuClient({
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (json?.ok && json.data) {
-          setMerchantMeta({
+          setMerchantMeta((prev) => ({
             id: json.data.id,
             name: json.data.name,
             slug: json.data.slug,
-            iconEmoji: json.data.iconEmoji || "🍲",
+            photoUrl: json.data.image !== undefined ? json.data.image : prev.photoUrl,
             sellingStatus: json.data.sellingStatus || "ENDED",
-          });
+          }));
         }
       })
       .catch(() => {
@@ -241,7 +241,7 @@ export default function MerchantMenuClient({
         user={user}
         merchantName={merchantMeta.name}
         merchantSlug={merchantMeta.slug}
-        iconEmoji={merchantMeta.iconEmoji}
+        photoUrl={merchantMeta.photoUrl}
         sellingStatus={merchantMeta.sellingStatus}
         trackerCode={codeTracker}
       />
