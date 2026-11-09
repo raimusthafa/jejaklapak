@@ -21,6 +21,7 @@ import {
   PanelLeft,
 } from "lucide-react";
 import { MerchantSidebar } from "@/components/merchant/MerchantSidebar";
+import { MerchantAvatar } from "@/components/common/MerchantAvatar";
 import { toast } from "@/components/ui/sonner";
 
 export interface MenuItemData {
@@ -324,9 +325,7 @@ export default function MerchantMenuClient({
                   }`}
                 >
                   <div className="flex items-start gap-3.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 font-bold text-base shrink-0 border border-slate-200/80">
-                      🍲
-                    </div>
+                    <MerchantAvatar image={item.image} name={item.name} className="h-11 w-11 rounded-xl" />
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-sm text-slate-900">{item.name}</h3>
@@ -537,4 +536,3 @@ export default function MerchantMenuClient({
     </div>
   );
 }
-

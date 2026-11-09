@@ -36,7 +36,7 @@ interface AuthUserData {
 const NAV_ITEMS = [
   { label: "Beranda", href: "/#beranda", icon: House },
   { label: "Tentang Kami", href: "/#tentang-kami", icon: Info },
-  { label: "Cara Kerja ", href: "/#cara-kerja", icon: CircleHelp },
+  { label: "Cara Kerja", href: "/#cara-kerja", icon: CircleHelp },
   { label: "Untuk Pedagang UMKM", short: "Untuk Pedagang", href: "/#untuk-pedagang", icon: Store },
 ];
 
@@ -113,9 +113,9 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#dce9ff] bg-white/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8 lg:grid lg:grid-cols-[auto_1fr_auto]">
         {/* Brand */}
-        <Link href="/" className="flex items-center group shrink-0">
+        <Link href="/" className="flex items-center group shrink-0 lg:justify-self-start">
           <Image
             src="/logo.png"
             alt="JejakLapak"
@@ -128,7 +128,7 @@ export function Navbar() {
         </Link>
 
         {/* Menu desktop */}
-        <nav className="hidden md:flex items-center gap-1 ml-4">
+        <nav className="hidden md:flex items-center gap-1 ml-4 lg:ml-0 lg:gap-2 lg:justify-self-center">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.label}
@@ -141,7 +141,7 @@ export function Navbar() {
         </nav>
 
         {/* Aksi */}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto lg:ml-0 flex items-center gap-2 lg:justify-self-end">
           {currentUser ? (
             <>
               <Link

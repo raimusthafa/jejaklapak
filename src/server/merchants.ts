@@ -6,15 +6,6 @@ import { Merchant, MerchantCategory } from "@/types/merchant";
 import { LngLat } from "@/types/location";
 import { MerchantProfileInput, UpdateScheduleInput, MenuItemInput } from "@/schemas/merchant";
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  "Makanan Berat": "🍲",
-  "Camilan & Gorengan": "🍢",
-  "Minuman Segar": "🍧",
-  "Kue & Roti": "🧇",
-  "Kopi & Teh": "☕",
-  "Jajanan Tradisional": "🥟",
-};
-
 /**
  * Check whether database is live and reachable.
  */
@@ -109,8 +100,7 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
         tagline: m.description ?? mockMatch?.tagline ?? "",
         description: m.description ?? mockMatch?.description ?? "",
         category: (m.category as MerchantCategory) || "Makanan Berat",
-        iconEmoji: mockMatch?.iconEmoji || CATEGORY_EMOJI[m.category] || "🍲",
-        image: m.image ?? mockMatch?.image ?? "/images/merchants/default.jpg",
+        image: m.image ?? mockMatch?.image ?? "",
         phone: m.phone,
         district: m.district,
         city: m.city,
@@ -243,8 +233,7 @@ export async function getMerchantForUser(user: {
           tagline: dbMerchant.description ?? mockMatch?.tagline ?? "",
           description: dbMerchant.description ?? mockMatch?.description ?? "",
           category: (dbMerchant.category as MerchantCategory) || "Makanan Berat",
-          iconEmoji: mockMatch?.iconEmoji || CATEGORY_EMOJI[dbMerchant.category] || "🍲",
-          image: dbMerchant.image ?? mockMatch?.image ?? "/images/merchants/default.jpg",
+          image: dbMerchant.image ?? mockMatch?.image ?? "",
           phone: dbMerchant.phone,
           district: dbMerchant.district,
           city: dbMerchant.city,
@@ -396,6 +385,37 @@ export async function updateMerchantProfile(merchantId: string, data: MerchantPr
     description: data.description ?? "",
   });
   return { id: merchantId, ...data };
+}
+
+/**
+ * Simpan (atau hapus, jika null) URL foto gerobak merchant.
+ * Mengembalikan URL foto sebelumnya agar file lamanya bisa dibersihkan dari storage.
+ */
+export async function setMerchantImage(
+  merchantId: string,
+  imageUrl: string | null
+): Promise<{ id: string; previousImage: string | null }> {
+  const isDbLive = await isDatabaseAvailable();
+  if (isDbLive) {
+    const targetId = await resolveMerchantId(merchantId);
+    const existing = await prisma.merchant.findUnique({
+      where: { id: targetId },
+      select: { image: true },
+    });
+    if (!existing) {
+      throw new Error("Lapak tidak ditemukan.");
+    }
+    await prisma.merchant.update({
+      where: { id: targetId },
+      data: { image: imageUrl },
+    });
+    return { id: targetId, previousImage: existing.image };
+  }
+
+  // Mode demo tanpa database: simpan di memori saja.
+  const previous = merchantService.getById(merchantId)?.image ?? null;
+  merchantService.updateProfile(merchantId, { image: imageUrl ?? "" });
+  return { id: merchantId, previousImage: previous };
 }
 
 /**

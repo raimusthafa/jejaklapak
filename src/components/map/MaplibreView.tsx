@@ -275,8 +275,8 @@ export default function MaplibreView({
         userEl.className = "relative flex items-center justify-center";
         userEl.innerHTML = `
           <span class="absolute h-8 w-8 rounded-full bg-[#006781]/40 animate-ping"></span>
-          <div class="h-6 w-6 rounded-full bg-[#006194] border-2 border-white shadow-md flex items-center justify-center text-white text-[11px] font-bold">
-            👤
+          <div class="h-6 w-6 rounded-full bg-[#006194] border-2 border-white shadow-md flex items-center justify-center">
+            <span class="h-2 w-2 rounded-full bg-white"></span>
           </div>
         `;
         userMarkerRef.current = new maplibregl.Marker({ element: userEl })

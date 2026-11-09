@@ -15,6 +15,7 @@ export interface AuthUser {
   merchantId?: string;
   merchantSlug?: string;
   merchantName?: string;
+  merchantImage?: string;
 }
 
 /**
@@ -47,6 +48,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     let phone: string | undefined = user.user_metadata?.phone as string | undefined;
     let merchantId: string | undefined;
     let merchantSlug: string | undefined;
+    let merchantImage: string | undefined;
     let merchantName: string | undefined =
       (user.user_metadata?.merchant_name as string) || undefined;
 
@@ -61,6 +63,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
               id: true,
               slug: true,
               name: true,
+              image: true,
             },
           },
         },
@@ -106,6 +109,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
                   id: true,
                   slug: true,
                   name: true,
+                  image: true,
                 },
               },
             },
@@ -146,6 +150,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
               id: true,
               slug: true,
               name: true,
+              image: true,
             },
           });
           dbUser.merchants = [newM];
@@ -162,6 +167,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
           merchantId = dbUser.merchants[0].id;
           merchantSlug = dbUser.merchants[0].slug;
           merchantName = dbUser.merchants[0].name;
+          merchantImage = dbUser.merchants[0].image ?? undefined;
         }
       }
     } catch {
@@ -177,6 +183,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       merchantId,
       merchantSlug,
       merchantName,
+      merchantImage,
     };
   } catch {
     return null;

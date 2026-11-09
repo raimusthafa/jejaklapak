@@ -71,16 +71,65 @@
 }
 
 @layer utilities {
-  .font-headline-xl { font-size: 40px; line-height: 48px; font-weight: 700; }
-  .font-headline-lg { font-size: 32px; line-height: 40px; font-weight: 700; }
-  .font-headline-md { font-size: 24px; line-height: 32px; font-weight: 600; }
-  .font-headline-sm { font-size: 20px; line-height: 28px; font-weight: 600; }
-  .font-body-lg { font-size: 16px; line-height: 24px; font-weight: 400; }
-  .font-body-md { font-size: 14px; line-height: 20px; font-weight: 400; }
-  .font-body-sm { font-size: 12px; line-height: 16px; font-weight: 400; }
-  .font-label-lg { font-size: 14px; line-height: 20px; font-weight: 600; }
-  .font-label-md { font-size: 12px; line-height: 16px; font-weight: 600; }
-  .font-label-sm { font-size: 11px; line-height: 14px; font-weight: 700; }
+  .font-headline-xl {
+    font-size: 40px;
+    line-height: 48px;
+    font-weight: 700;
+  }
+
+  .font-headline-lg {
+    font-size: 32px;
+    line-height: 40px;
+    font-weight: 700;
+  }
+
+  .font-headline-md {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: 600;
+  }
+
+  .font-headline-sm {
+    font-size: 20px;
+    line-height: 28px;
+    font-weight: 600;
+  }
+
+  .font-body-lg {
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+  }
+
+  .font-body-md {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+  }
+
+  .font-body-sm {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+  }
+
+  .font-label-lg {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+  }
+
+  .font-label-md {
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 600;
+  }
+
+  .font-label-sm {
+    font-size: 11px;
+    line-height: 14px;
+    font-weight: 700;
+  }
 }
 
 :root {
@@ -165,10 +214,12 @@ body {
     transform: scale(0.9);
     opacity: 0.8;
   }
+
   70% {
     transform: scale(2.4);
     opacity: 0;
   }
+
   100% {
     transform: scale(2.6);
     opacity: 0;
@@ -353,11 +404,14 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
 }
 

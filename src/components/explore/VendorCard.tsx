@@ -3,6 +3,7 @@
 import { Merchant } from "@/types/merchant";
 import { calculateFreshness } from "@/services/mock/merchantService";
 import { Store, Navigation } from "lucide-react";
+import { MerchantAvatar } from "@/components/common/MerchantAvatar";
 
 interface VendorCardProps {
   merchant: Merchant;
@@ -85,9 +86,7 @@ export function VendorCard({
       {/* Main Row */}
       <div className="flex items-start gap-2.5">
         {/* Avatar */}
-        <div className="w-11 h-11 rounded-lg bg-[#eff4ff] flex items-center justify-center shrink-0 text-2xl border border-[#d5e3fc]/60">
-          <span>{merchant.iconEmoji || "🍲"}</span>
-        </div>
+        <MerchantAvatar image={merchant.image} name={merchant.name} className="h-11 w-11 rounded-lg" />
 
         {/* Info */}
         <div className="flex-1 min-w-0 pr-14">

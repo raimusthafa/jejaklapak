@@ -51,7 +51,6 @@ export interface Merchant {
   tagline: string;
   description: string;
   category: MerchantCategory;
-  iconEmoji: string;
   image: string;
   phone: string;
   district: string;
@@ -65,4 +64,3 @@ export interface Merchant {
   menu: MenuItem[];
   createdAt: string;
 }
-

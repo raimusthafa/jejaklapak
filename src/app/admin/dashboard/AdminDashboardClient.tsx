@@ -17,6 +17,7 @@ import {
   Power,
   RefreshCw,
 } from "lucide-react";
+import { MerchantAvatar } from "@/components/common/MerchantAvatar";
 
 interface AdminDashboardClientProps {
   adminUser?: AuthUser;
@@ -194,7 +195,7 @@ export default function AdminDashboardClient({ adminUser }: AdminDashboardClient
                   <tr key={m.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xl shrink-0">{m.iconEmoji || "🍲"}</span>
+                        <MerchantAvatar image={m.image} name={m.name} className="h-9 w-9 rounded-lg" />
                         <div>
                           <div className="font-bold text-slate-900 flex items-center gap-1.5">
                             {m.name}
@@ -285,4 +286,3 @@ export default function AdminDashboardClient({ adminUser }: AdminDashboardClient
     </div>
   );
 }
-
