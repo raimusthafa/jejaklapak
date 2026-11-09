@@ -15,6 +15,9 @@ export async function reportMerchantLocationAction(
   if (!user) {
     return { ok: false, message: "Akses ditolak." };
   }
+  if (user.role !== "ADMIN" && user.merchantId && user.merchantId !== merchantId) {
+    return { ok: false, message: "Akses ditolak: Anda bukan pemilik lapak ini." };
+  }
 
   const parsed = reportLocationSchema.safeParse({
     merchantId,

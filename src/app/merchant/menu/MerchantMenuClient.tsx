@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { AuthUser } from "@/server/auth";
+import { Merchant, SellingStatus } from "@/types/merchant";
 import {
   createMenuItemAction,
   updateMenuItemAction,
@@ -35,17 +36,55 @@ export interface MenuItemData {
 
 interface MerchantMenuClientProps {
   user: AuthUser;
+  initialMerchant?: Merchant | null;
   initialItems: MenuItemData[];
 }
 
 export default function MerchantMenuClient({
   user,
+  initialMerchant,
   initialItems,
 }: MerchantMenuClientProps) {
-  const merchantId = user.merchantId || "00000000-0000-4000-8000-000000000100";
+  const merchantId =
+    initialMerchant?.id || user.merchantId || "00000000-0000-4000-8000-000000000100";
+  const [merchantMeta, setMerchantMeta] = useState<{
+    id: string;
+    name: string;
+    slug?: string;
+    iconEmoji: string;
+    sellingStatus: SellingStatus;
+  }>({
+    id: merchantId,
+    name: initialMerchant?.name || user.merchantName || "Lapak Saya",
+    slug: initialMerchant?.slug || user.merchantSlug,
+    iconEmoji: initialMerchant?.iconEmoji || "🍲",
+    sellingStatus: initialMerchant?.sellingStatus || "ENDED",
+  });
   const [items, setItems] = useState<MenuItemData[]>(initialItems);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const targetId = initialMerchant?.id || user.merchantId || user.merchantSlug;
+    if (!targetId) return;
+
+    fetch(`/api/merchants/${encodeURIComponent(targetId)}`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json?.ok && json.data) {
+          setMerchantMeta({
+            id: json.data.id,
+            name: json.data.name,
+            slug: json.data.slug,
+            iconEmoji: json.data.iconEmoji || "🍲",
+            sellingStatus: json.data.sellingStatus || "ENDED",
+          });
+        }
+      })
+      .catch(() => {
+        // Pertahankan data SSR jika API gagal dijangkau
+      });
+  }, [initialMerchant?.id, user.merchantId, user.merchantSlug]);
 
   // Modal State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -105,7 +144,7 @@ export default function MerchantMenuClient({
     startTransition(async () => {
       if (editingItem) {
         // Edit existing
-        const res = await updateMenuItemAction(merchantId, editingItem.id, formData);
+        const res = await updateMenuItemAction(merchantMeta.id, editingItem.id, formData);
         if (res.ok) {
           setItems((prev) =>
             prev.map((it) =>
@@ -127,11 +166,11 @@ export default function MerchantMenuClient({
         }
       } else {
         // Create new
-        const res = await createMenuItemAction(merchantId, formData);
+        const res = await createMenuItemAction(merchantMeta.id, formData);
         if (res.ok) {
           const createdItem = (res.data as MenuItemData) || {
             id: `item-${Date.now()}`,
-            merchantId,
+            merchantId: merchantMeta.id,
             name: formName.trim(),
             price: priceNum,
             description: formDesc.trim(),
@@ -155,7 +194,7 @@ export default function MerchantMenuClient({
     );
 
     startTransition(async () => {
-      const res = await toggleMenuItemAvailabilityAction(merchantId, item.id, nextState);
+      const res = await toggleMenuItemAvailabilityAction(merchantMeta.id, item.id, nextState);
       if (res.ok) {
         showToast("success", res.message || "Status menu diperbarui.");
       } else {
@@ -177,7 +216,7 @@ export default function MerchantMenuClient({
     setDeleteTarget(null);
 
     startTransition(async () => {
-      const res = await deleteMenuItemAction(merchantId, targetId);
+      const res = await deleteMenuItemAction(merchantMeta.id, targetId);
       if (res.ok) {
         showToast("success", "Menu berhasil dihapus.");
       } else {
@@ -190,6 +229,8 @@ export default function MerchantMenuClient({
   const availableCount = items.filter((it) => it.isAvailable).length;
   const outOfStockCount = totalCount - availableCount;
 
+  const codeTracker = `BDG-${merchantMeta.id.slice(-4).toUpperCase()}`;
+
   return (
     <div className="min-h-screen bg-[#f4f8fb] text-slate-800 flex">
       {/* Merchant Sidebar */}
@@ -197,8 +238,11 @@ export default function MerchantMenuClient({
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         user={user}
-        merchantName={user.merchantName}
-        merchantSlug={user.merchantSlug}
+        merchantName={merchantMeta.name}
+        merchantSlug={merchantMeta.slug}
+        iconEmoji={merchantMeta.iconEmoji}
+        sellingStatus={merchantMeta.sellingStatus}
+        trackerCode={codeTracker}
       />
 
       {/* Main Content Area */}
@@ -233,7 +277,7 @@ export default function MerchantMenuClient({
                     Kelola Menu &amp; Produk Lapak
                   </h1>
                   <span className="rounded bg-[#e6f6fc] px-2 py-0.5 text-[10px] font-semibold text-[#0284c7] border border-sky-200">
-                    {user.merchantName || "Lapak Saya"}
+                    {merchantMeta.name || "Lapak Saya"}
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mt-0.5">

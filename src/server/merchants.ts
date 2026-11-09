@@ -8,6 +8,7 @@ import { MerchantProfileInput, UpdateScheduleInput, MenuItemInput } from "@/sche
 
 const CATEGORY_EMOJI: Record<string, string> = {
   "Makanan Berat": "🍲",
+  "Camilan": "🍢",
   "Camilan & Gorengan": "🍢",
   "Minuman Segar": "🍧",
   "Kue & Roti": "🧇",
@@ -460,6 +461,10 @@ export async function updateSellingSession(
     if (isDbLive) {
       const targetId = await resolveMerchantId(merchantId);
       if (action === "START") {
+        await prisma.sellingSession.updateMany({
+          where: { merchantId: targetId, status: { in: ["ACTIVE", "PAUSED"] } },
+          data: { status: "ENDED", endedAt: new Date() },
+        });
         await prisma.sellingSession.create({
           data: {
             merchantId: targetId,
@@ -476,6 +481,14 @@ export async function updateSellingSession(
             where: { id: latestSession.id },
             data: { status: "PAUSED", pausedAt: new Date() },
           });
+        } else {
+          await prisma.sellingSession.create({
+            data: {
+              merchantId: targetId,
+              status: "PAUSED",
+              pausedAt: new Date(),
+            },
+          });
         }
       } else if (action === "RESUME") {
         const latestSession = await prisma.sellingSession.findFirst({
@@ -487,18 +500,19 @@ export async function updateSellingSession(
             where: { id: latestSession.id },
             data: { status: "ACTIVE", pausedAt: null },
           });
-        }
-      } else if (action === "END") {
-        const latestSession = await prisma.sellingSession.findFirst({
-          where: { merchantId: targetId, status: { in: ["ACTIVE", "PAUSED"] } },
-          orderBy: { startedAt: "desc" },
-        });
-        if (latestSession) {
-          await prisma.sellingSession.update({
-            where: { id: latestSession.id },
-            data: { status: "ENDED", endedAt: new Date() },
+        } else {
+          await prisma.sellingSession.create({
+            data: {
+              merchantId: targetId,
+              status: "ACTIVE",
+            },
           });
         }
+      } else if (action === "END") {
+        await prisma.sellingSession.updateMany({
+          where: { merchantId: targetId, status: { in: ["ACTIVE", "PAUSED"] } },
+          data: { status: "ENDED", endedAt: new Date() },
+        });
       }
     }
   } catch (err) {

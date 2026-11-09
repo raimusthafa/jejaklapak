@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Merchant } from "@/types/merchant";
 import { updateMerchantProfileAction } from "@/actions/merchant";
-import { MerchantCategory } from "@/types/merchant";
+import { Merchant, MerchantCategory, SellingStatus } from "@/types/merchant";
 import { CATEGORIES, BANDUNG_DISTRICTS } from "@/config/constants";
 import { ArrowLeft, Save, PanelLeft } from "lucide-react";
 import { AuthUser } from "@/server/auth";
@@ -66,6 +65,12 @@ export default function MerchantProfileClient({
   const [district, setDistrict] = useState(initialMerchant?.district || current.district);
   const [operatingArea, setOperatingArea] = useState(initialMerchant?.operatingArea || current.operatingArea);
   const [iconEmoji, setIconEmoji] = useState(initialMerchant?.iconEmoji || current.iconEmoji || "🍲");
+  const [sellingStatus, setSellingStatus] = useState<SellingStatus>(
+    initialMerchant?.sellingStatus || "ENDED"
+  );
+  const [merchantSlug, setMerchantSlug] = useState(
+    initialMerchant?.slug || user?.merchantSlug || current.slug
+  );
 
   const [isPending, setIsPending] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -73,11 +78,13 @@ export default function MerchantProfileClient({
 
   useEffect(() => {
     async function fetchMerchantData() {
-      const targetId = user?.merchantId || user?.merchantSlug;
+      const targetId = initialMerchant?.id || user?.merchantId || user?.merchantSlug;
       if (!targetId) return;
 
       try {
-        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`);
+        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`, {
+          cache: "no-store",
+        });
         if (res.ok) {
           const json = await res.json();
           if (json.ok && json.data) {
@@ -91,6 +98,8 @@ export default function MerchantProfileClient({
             setDistrict(found.district);
             setOperatingArea(found.operatingArea);
             setIconEmoji(found.iconEmoji || "🍲");
+            setSellingStatus(found.sellingStatus || "ENDED");
+            if (found.slug) setMerchantSlug(found.slug);
           }
         }
       } catch (err) {
@@ -98,7 +107,7 @@ export default function MerchantProfileClient({
       }
     }
     fetchMerchantData();
-  }, [user?.merchantId, user?.merchantSlug]);
+  }, [initialMerchant?.id, user?.merchantId, user?.merchantSlug]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +137,8 @@ export default function MerchantProfileClient({
     }
   };
 
+  const codeTracker = `BDG-${merchantId.slice(-4).toUpperCase()}`;
+
   return (
     <div className="min-h-screen bg-[#f4f8fb] text-slate-800 flex">
       {/* Merchant Sidebar */}
@@ -136,8 +147,10 @@ export default function MerchantProfileClient({
         onClose={() => setIsSidebarOpen(false)}
         user={user}
         merchantName={name}
-        merchantSlug={user?.merchantSlug || current.slug}
+        merchantSlug={merchantSlug}
         iconEmoji={iconEmoji}
+        sellingStatus={sellingStatus}
+        trackerCode={codeTracker}
       />
 
       {/* Main Content Area */}

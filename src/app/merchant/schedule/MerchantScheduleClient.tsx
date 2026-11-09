@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { DaySchedule } from "@/types/merchant";
+import { DaySchedule, Merchant, SellingStatus } from "@/types/merchant";
 import { updateMerchantSchedulesAction } from "@/actions/merchant";
 import { ArrowLeft, Save, PanelLeft } from "lucide-react";
 import { AuthUser } from "@/server/auth";
@@ -21,12 +21,27 @@ const DEFAULT_SCHEDULES: DaySchedule[] = [
 
 export default function MerchantScheduleClient({
   user,
+  initialMerchant,
   initialSchedules,
 }: {
   user?: AuthUser;
+  initialMerchant?: Merchant | null;
   initialSchedules?: DaySchedule[];
 }) {
-  const [merchantId, setMerchantId] = useState(user?.merchantId || "merchant-new");
+  const [merchantId, setMerchantId] = useState(
+    initialMerchant?.id || user?.merchantId || "merchant-new"
+  );
+  const [merchantMeta, setMerchantMeta] = useState<{
+    name: string;
+    slug?: string;
+    iconEmoji: string;
+    sellingStatus: SellingStatus;
+  }>({
+    name: initialMerchant?.name || user?.merchantName || "Lapak Saya",
+    slug: initialMerchant?.slug || user?.merchantSlug,
+    iconEmoji: initialMerchant?.iconEmoji || "🍲",
+    sellingStatus: initialMerchant?.sellingStatus || "ENDED",
+  });
   const [schedule, setSchedule] = useState<DaySchedule[]>(
     initialSchedules && initialSchedules.length > 0 ? initialSchedules : DEFAULT_SCHEDULES
   );
@@ -35,15 +50,23 @@ export default function MerchantScheduleClient({
 
   useEffect(() => {
     async function fetchSchedules() {
-      const targetId = user?.merchantId || user?.merchantSlug;
+      const targetId = initialMerchant?.id || user?.merchantId || user?.merchantSlug;
       if (!targetId) return;
 
       try {
-        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`);
+        const res = await fetch(`/api/merchants/${encodeURIComponent(targetId)}`, {
+          cache: "no-store",
+        });
         if (res.ok) {
           const json = await res.json();
           if (json.ok && json.data) {
             setMerchantId(json.data.id);
+            setMerchantMeta({
+              name: json.data.name || "Lapak Saya",
+              slug: json.data.slug,
+              iconEmoji: json.data.iconEmoji || "🍲",
+              sellingStatus: json.data.sellingStatus || "ENDED",
+            });
             if (json.data.schedule && json.data.schedule.length > 0) {
               setSchedule(json.data.schedule);
             }
@@ -54,7 +77,7 @@ export default function MerchantScheduleClient({
       }
     }
     fetchSchedules();
-  }, [user?.merchantId, user?.merchantSlug]);
+  }, [initialMerchant?.id, user?.merchantId, user?.merchantSlug]);
 
   const handleToggleDay = (dayOfWeek: number) => {
     setSchedule((prev) =>
@@ -93,6 +116,8 @@ export default function MerchantScheduleClient({
     }
   };
 
+  const codeTracker = `BDG-${merchantId.slice(-4).toUpperCase()}`;
+
   return (
     <div className="min-h-screen bg-[#f4f8fb] text-slate-800 flex">
       {/* Merchant Sidebar */}
@@ -100,8 +125,11 @@ export default function MerchantScheduleClient({
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         user={user}
-        merchantName={user?.merchantName || "Lapak Saya"}
-        merchantSlug={user?.merchantSlug || "lapak-saya"}
+        merchantName={merchantMeta.name}
+        merchantSlug={merchantMeta.slug}
+        iconEmoji={merchantMeta.iconEmoji}
+        sellingStatus={merchantMeta.sellingStatus}
+        trackerCode={codeTracker}
       />
 
       {/* Main Content Area */}

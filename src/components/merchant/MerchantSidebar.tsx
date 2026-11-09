@@ -40,9 +40,14 @@ export function MerchantSidebar({
   merchantName = "Lapak Pedagang",
   merchantSlug,
   iconEmoji = "🍲",
-  sellingStatus = "ACTIVE",
-  trackerCode = "BDG-0100",
+  sellingStatus = "ENDED",
+  trackerCode,
 }: MerchantSidebarProps) {
+  const resolvedTrackerCode =
+    trackerCode ||
+    (user?.merchantId
+      ? `BDG-${user.merchantId.slice(-4).toUpperCase()}`
+      : "BDG-0000");
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -186,7 +191,7 @@ export function MerchantSidebar({
               </span>
               <div className="min-w-0 flex-1">
                 <h2 className="text-xs font-bold text-slate-900 truncate">{merchantName}</h2>
-                <p className="text-[11px] text-slate-500 font-medium">#{trackerCode}</p>
+                <p className="text-[11px] text-slate-500 font-medium">#{resolvedTrackerCode}</p>
               </div>
             </div>
 

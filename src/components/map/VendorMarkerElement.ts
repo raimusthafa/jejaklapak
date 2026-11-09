@@ -8,8 +8,8 @@ export function createVendorMarkerElement(
   onDeselect?: () => void
 ): HTMLElement {
   const el = document.createElement("div");
-  el.className = "cursor-pointer group select-none relative";
-  el.style.transform = "translate(-50%, -50%)";
+  el.className = "cursor-pointer group select-none";
+  el.style.zIndex = isSelected ? "30" : "20";
 
   const isLive = merchant.sellingStatus === "ACTIVE";
   const isPaused = merchant.sellingStatus === "PAUSED";
@@ -55,10 +55,13 @@ export function createVendorMarkerElement(
     ? isSelected
       ? "border-[#994100] ring-4 ring-[#ffdbca] bg-white"
       : "border-[#994100] bg-white"
-    : "border-slate-400 bg-white opacity-80";
+    : "border-slate-400 bg-white";
 
-  pin.className = `relative flex h-10 w-10 items-center justify-center rounded-full border-2 text-base transition-all shadow-md ${borderColor}`;
-  pin.innerHTML = `<span>${merchant.iconEmoji || "🍲"}</span>`;
+  pin.className = `relative flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg leading-none transition-all shadow-md ${borderColor}`;
+  const emojiSpan = document.createElement("span");
+  emojiSpan.className = "select-none leading-none";
+  emojiSpan.textContent = merchant.iconEmoji || "🍲";
+  pin.appendChild(emojiSpan);
 
   // 4. Live Pulse Dot Badge
   const dot = document.createElement("span");

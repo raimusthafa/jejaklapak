@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getMerchantByIdOrSlug } from "@/server/merchants";
 
 export async function GET(
   _request: Request,
   props: { params: Promise<{ id: string }> }
 ) {
+  await connection();
   try {
     const { id } = await props.params;
     const merchant = await getMerchantByIdOrSlug(id);
@@ -12,14 +13,26 @@ export async function GET(
     if (!merchant) {
       return NextResponse.json(
         { ok: false, error: "Pedagang tidak ditemukan" },
-        { status: 404 }
+        {
+          status: 404,
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          },
+        }
       );
     }
 
-    return NextResponse.json({
-      ok: true,
-      data: merchant,
-    });
+    return NextResponse.json(
+      {
+        ok: true,
+        data: merchant,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       {
