@@ -2,7 +2,13 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { merchantService } from "@/services/mock/merchantService";
 import { MOCK_MERCHANTS } from "@/data/mock/merchants";
-import { Merchant, MerchantCategory } from "@/types/merchant";
+import {
+  AdminMerchantRecord,
+  Merchant,
+  MerchantCategory,
+  SellingStatus,
+  VerificationStatus,
+} from "@/types/merchant";
 import { LngLat } from "@/types/location";
 import { MerchantProfileInput, UpdateScheduleInput, MenuItemInput } from "@/schemas/merchant";
 
@@ -71,6 +77,7 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
         verificationStatus: "VERIFIED",
       },
       include: {
+        owner: { select: { name: true } },
         schedules: true,
         menuItems: true,
         sessions: {
@@ -83,7 +90,8 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
           take: 15,
         },
       },
-      take: 50,
+      orderBy: { createdAt: "desc" },
+      take: 200,
     });
 
     if (dbMerchants.length === 0) {
@@ -104,7 +112,7 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
       return {
         id: m.id,
         ownerId: m.ownerId,
-        ownerName: mockMatch?.ownerName ?? "Mitra Pedagang",
+        ownerName: m.owner?.name ?? mockMatch?.ownerName ?? "Mitra Pedagang",
         name: m.name,
         slug: m.slug,
         tagline: m.description ?? mockMatch?.tagline ?? "",
@@ -132,7 +140,7 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
           city: m.city,
           capturedAt: latestLocation
             ? latestLocation.capturedAt.toISOString()
-            : (mockMatch?.location.capturedAt ?? "2026-01-01T00:00:00.000Z"),
+            : m.createdAt.toISOString(),
         },
         schedule:
           m.schedules.length > 0
@@ -700,3 +708,273 @@ export async function toggleMenuItemAvailability(
 ) {
   return await updateMenuItem(menuItemId, { isAvailable });
 }
+
+const ADMIN_DAY_NAMES = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+
+const adminMerchantInclude = {
+  owner: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+  },
+  sessions: {
+    where: { status: { in: ["ACTIVE", "PAUSED"] as Array<"ACTIVE" | "PAUSED"> } },
+    orderBy: { startedAt: "desc" as const },
+    take: 1,
+  },
+  locations: {
+    orderBy: { capturedAt: "desc" as const },
+    take: 1,
+  },
+  schedules: {
+    orderBy: { dayOfWeek: "asc" as const },
+  },
+  menuItems: {
+    orderBy: { createdAt: "asc" as const },
+  },
+};
+
+function mapDbMerchantToAdminRecord(m: {
+  id: string;
+  ownerId: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  category: string;
+  phone: string;
+  address: string;
+  district: string;
+  city: string;
+  operatingArea: string;
+  verificationStatus: string;
+  createdAt: Date;
+  updatedAt: Date;
+  owner: { id: string; name: string; email: string } | null;
+  sessions: Array<{ status: string }>;
+  locations: Array<{
+    latitude: number;
+    longitude: number;
+    accuracy: number | null;
+    capturedAt: Date;
+  }>;
+  schedules: Array<{
+    dayOfWeek: number;
+    isOpen: boolean;
+    startTime: string;
+    endTime: string;
+  }>;
+  menuItems: Array<{
+    id: string;
+    name: string;
+    price: number;
+    description: string | null;
+    isAvailable: boolean;
+  }>;
+}): AdminMerchantRecord {
+  const activeSession = m.sessions[0];
+  const latestLocation = m.locations[0];
+
+  return {
+    id: m.id,
+    ownerId: m.ownerId,
+    ownerName: m.owner?.name ?? "Pemilik Tidak Tercatat",
+    ownerEmail: m.owner?.email ?? "",
+    name: m.name,
+    slug: m.slug,
+    description: m.description ?? "",
+    category: m.category,
+    iconEmoji: CATEGORY_EMOJI[m.category] || "🍲",
+    phone: m.phone,
+    address: m.address,
+    district: m.district,
+    city: m.city,
+    operatingArea: m.operatingArea,
+    verificationStatus: (m.verificationStatus as VerificationStatus) || "PENDING",
+    sellingStatus: activeSession ? (activeSession.status as SellingStatus) : "ENDED",
+    menuCount: m.menuItems.length,
+    hasLocation: Boolean(latestLocation),
+    latitude: latestLocation ? latestLocation.latitude : null,
+    longitude: latestLocation ? latestLocation.longitude : null,
+    accuracyMeters: latestLocation?.accuracy ?? null,
+    lastLocationAt: latestLocation ? latestLocation.capturedAt.toISOString() : null,
+    schedule: m.schedules.map((s) => ({
+      dayOfWeek: s.dayOfWeek,
+      dayName: ADMIN_DAY_NAMES[s.dayOfWeek] || `Hari ${s.dayOfWeek}`,
+      isOpen: s.isOpen,
+      startTime: s.startTime,
+      endTime: s.endTime,
+    })),
+    menu: m.menuItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      description: item.description ?? "",
+      isAvailable: item.isAvailable,
+    })),
+    createdAt: m.createdAt.toISOString(),
+    updatedAt: m.updatedAt.toISOString(),
+  };
+}
+
+/**
+ * Mengambil seluruh daftar pedagang langsung dari database PostgreSQL untuk Dashboard Admin.
+ * Tidak menggunakan fallback data mock/statis, dan memprioritaskan status PENDING di paling atas.
+ */
+const VERIFICATION_SORT_PRIORITY: Record<VerificationStatus, number> = {
+  PENDING: 0,
+  VERIFIED: 1,
+  REJECTED: 2,
+};
+
+export async function getAdminMerchants(): Promise<AdminMerchantRecord[]> {
+  const dbMerchants = await prisma.merchant.findMany({
+    include: adminMerchantInclude,
+    orderBy: [{ createdAt: "desc" }],
+  });
+
+  return dbMerchants
+    .map(mapDbMerchantToAdminRecord)
+    .sort((a, b) => {
+      const rankDiff =
+        VERIFICATION_SORT_PRIORITY[a.verificationStatus] -
+        VERIFICATION_SORT_PRIORITY[b.verificationStatus];
+      if (rankDiff !== 0) return rankDiff;
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+}
+
+/**
+ * Memperbarui status verifikasi merchant langsung ke database PostgreSQL.
+ * Jika status menjadi REJECTED, seluruh sesi jualan aktif/jeda dihentikan.
+ */
+export async function adminUpdateMerchantVerification(
+  merchantId: string,
+  verificationStatus: VerificationStatus
+): Promise<AdminMerchantRecord | null> {
+  try {
+    if (verificationStatus !== "REJECTED") {
+      const updated = await prisma.merchant.update({
+        where: { id: merchantId },
+        data: { verificationStatus },
+        include: adminMerchantInclude,
+      });
+      return mapDbMerchantToAdminRecord(updated);
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.merchant.update({
+        where: { id: merchantId },
+        data: { verificationStatus: "REJECTED" },
+      });
+      await tx.sellingSession.updateMany({
+        where: { merchantId, status: { in: ["ACTIVE", "PAUSED"] } },
+        data: { status: "ENDED", endedAt: new Date() },
+      });
+      return tx.merchant.findUnique({
+        where: { id: merchantId },
+        include: adminMerchantInclude,
+      });
+    });
+
+    return updated ? mapDbMerchantToAdminRecord(updated) : null;
+  } catch (err) {
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "code" in err &&
+      (err as { code?: string }).code === "P2025"
+    ) {
+      return null;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Mengubah status sesi jualan merchant langsung di tabel selling_sessions oleh Admin.
+ */
+export async function adminUpdateMerchantSession(
+  merchantId: string,
+  targetStatus: SellingStatus
+): Promise<
+  | { ok: true; merchant: AdminMerchantRecord }
+  | { ok: false; message: string }
+> {
+  const existing = await prisma.merchant.findUnique({
+    where: { id: merchantId },
+    select: { id: true, verificationStatus: true },
+  });
+
+  if (!existing) {
+    return { ok: false, message: "Data pedagang tidak ditemukan di database." };
+  }
+
+  if (targetStatus !== "ENDED" && existing.verificationStatus === "REJECTED") {
+    return {
+      ok: false,
+      message: "Merchant berstatus Ditolak. Verifikasi ulang terlebih dahulu sebelum mengaktifkan sesi.",
+    };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (targetStatus === "ENDED") {
+      await tx.sellingSession.updateMany({
+        where: { merchantId, status: { in: ["ACTIVE", "PAUSED"] } },
+        data: { status: "ENDED", endedAt: new Date() },
+      });
+      return;
+    }
+
+    const latestOpen = await tx.sellingSession.findFirst({
+      where: { merchantId, status: { in: ["ACTIVE", "PAUSED"] } },
+      orderBy: { startedAt: "desc" },
+    });
+
+    if (targetStatus === "PAUSED") {
+      if (latestOpen) {
+        await tx.sellingSession.update({
+          where: { id: latestOpen.id },
+          data: { status: "PAUSED", pausedAt: new Date() },
+        });
+      } else {
+        await tx.sellingSession.create({
+          data: {
+            merchantId,
+            status: "PAUSED",
+            pausedAt: new Date(),
+          },
+        });
+      }
+      return;
+    }
+
+    // targetStatus === "ACTIVE"
+    if (latestOpen) {
+      await tx.sellingSession.update({
+        where: { id: latestOpen.id },
+        data: { status: "ACTIVE", pausedAt: null },
+      });
+    } else {
+      await tx.sellingSession.create({
+        data: {
+          merchantId,
+          status: "ACTIVE",
+        },
+      });
+    }
+  });
+
+  const updated = await prisma.merchant.findUnique({
+    where: { id: merchantId },
+    include: adminMerchantInclude,
+  });
+
+  if (!updated) {
+    return { ok: false, message: "Gagal memuat ulang data pedagang setelah pembaruan." };
+  }
+
+  return { ok: true, merchant: mapDbMerchantToAdminRecord(updated) };
+}
+

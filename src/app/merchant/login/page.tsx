@@ -61,9 +61,8 @@ function LoginForm() {
       }
       const destination = redirectParam || state.redirectTo || "/merchant/dashboard";
       const timer = setTimeout(() => {
-        router.push(destination);
-        router.refresh();
-      }, 700);
+        router.replace(destination);
+      }, 500);
       return () => clearTimeout(timer);
     } else if (state.message) {
       toast.error(state.message, { id: "login-status" });

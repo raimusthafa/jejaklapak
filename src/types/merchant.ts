@@ -66,3 +66,41 @@ export interface Merchant {
   createdAt: string;
 }
 
+export interface AdminMerchantMenuItem {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  isAvailable: boolean;
+}
+
+export interface AdminMerchantRecord {
+  id: string;
+  ownerId: string;
+  ownerName: string;
+  ownerEmail: string;
+  name: string;
+  slug: string;
+  description: string;
+  category: string;
+  iconEmoji: string;
+  phone: string;
+  address: string;
+  district: string;
+  city: string;
+  operatingArea: string;
+  verificationStatus: VerificationStatus;
+  sellingStatus: SellingStatus;
+  menuCount: number;
+  hasLocation: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  accuracyMeters: number | null;
+  lastLocationAt: string | null;
+  schedule: DaySchedule[];
+  menu: AdminMerchantMenuItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+

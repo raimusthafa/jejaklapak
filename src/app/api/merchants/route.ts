@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, connection } from "next/server";
 import { getPublicMerchants } from "@/server/merchants";
 
+/** Daftar pedagang terverifikasi dari PostgreSQL tanpa cache statis. */
 export async function GET(request: Request) {
+  await connection();
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -20,11 +22,19 @@ export async function GET(request: Request) {
       merchants = merchants.filter((m) => m.sellingStatus === status);
     }
 
-    return NextResponse.json({
-      ok: true,
-      data: merchants,
-      total: merchants.length,
-    });
+    return NextResponse.json(
+      {
+        ok: true,
+        data: merchants,
+        total: merchants.length,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          Pragma: "no-cache",
+        },
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       {

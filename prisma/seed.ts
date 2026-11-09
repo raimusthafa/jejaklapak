@@ -5,6 +5,7 @@ dotenv.config();
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client.js";
 import { MOCK_MERCHANTS } from "../src/data/mock/merchants.js";
+import { seedAdminUser } from "./admin-seeder.js";
 
 const connectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
 if (!connectionString) {
@@ -181,7 +182,12 @@ async function main() {
     }
   }
 
-  console.log("🎉 SEEDING SUKSES! Seluruh 8 pedagang Bandung Raya telah tersimpan di Supabase live database.");
+  const admin = await seedAdminUser(prisma);
+  console.log(
+    `🔐 Seeding Admin selesai: ${admin.email} (role: ${admin.role}, Supabase Auth synced: ${admin.authSynced})`
+  );
+
+  console.log("🎉 SEEDING SUKSES! Seluruh pedagang Bandung Raya & akun Admin telah tersimpan di database.");
 }
 
 main()

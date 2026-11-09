@@ -46,17 +46,25 @@ export function Navbar() {
 
   useEffect(() => {
     let isMounted = true;
+    let activeController: AbortController | null = null;
     const supabase = createClient();
 
     const loadUser = () => {
-      fetch("/api/auth/me", { cache: "no-store" })
+      activeController?.abort();
+      const controller = new AbortController();
+      activeController = controller;
+
+      fetch("/api/auth/me", { cache: "no-store", signal: controller.signal })
         .then((res) => (res.ok ? res.json() : { user: null }))
         .then((json) => {
           if (isMounted) {
             setCurrentUser(json.user || null);
           }
         })
-        .catch(() => {
+        .catch((err) => {
+          if (err instanceof Error && err.name === "AbortError") {
+            return;
+          }
           if (isMounted) {
             setCurrentUser(null);
           }
@@ -75,6 +83,9 @@ export function Navbar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "INITIAL_SESSION") {
+        return;
+      }
       if (event === "SIGNED_OUT" && isMounted) {
         setCurrentUser(null);
       }
@@ -83,6 +94,7 @@ export function Navbar() {
 
     return () => {
       isMounted = false;
+      activeController?.abort();
       window.removeEventListener("jejaklapak-auth-changed", handleAuthChanged);
       window.removeEventListener("focus", handleAuthChanged);
       subscription.unsubscribe();
