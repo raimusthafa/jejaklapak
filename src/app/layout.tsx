@@ -47,6 +47,7 @@ export default function RootLayout({
       lang="id"
       className={cn("h-full", "font-sans", plusJakartaSans.variable)}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />

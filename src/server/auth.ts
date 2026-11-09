@@ -15,6 +15,7 @@ export interface AuthUser {
   merchantId?: string;
   merchantSlug?: string;
   merchantName?: string;
+  merchantImage?: string;
 }
 
 /**
@@ -47,24 +48,38 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
     let phone: string | undefined = user.user_metadata?.phone as string | undefined;
     let merchantId: string | undefined;
     let merchantSlug: string | undefined;
+    let merchantImage: string | undefined;
     let merchantName: string | undefined =
       (user.user_metadata?.merchant_name as string) || undefined;
 
     // Coba ambil relasi dari database Prisma
     try {
-      let dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        include: {
-          merchants: {
-            take: 1,
-            select: {
-              id: true,
-              slug: true,
-              name: true,
-            },
+      const dbUserInclude = {
+        merchants: {
+          take: 1,
+          orderBy: { createdAt: "asc" as const },
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            image: true,
           },
         },
+      };
+
+      let dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: dbUserInclude,
       });
+
+      // Akun bisa saja sudah ada di tabel users dengan id berbeda (mis. data seed/import)
+      // tetapi emailnya sama. Cari lewat email agar lapak yang sudah disetujui tetap terhubung.
+      if (!dbUser && user.email) {
+        dbUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          include: dbUserInclude,
+        });
+      }
 
       // Auto-sync jika user di Supabase belum ada di Prisma
       if (!dbUser && role === "MERCHANT") {
@@ -99,16 +114,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
                 },
               },
             },
-            include: {
-              merchants: {
-                take: 1,
-                select: {
-                  id: true,
-                  slug: true,
-                  name: true,
-                },
-              },
-            },
+            include: dbUserInclude,
           });
         } catch (syncErr) {
           console.warn("Auto-sync merchant failed:", syncErr);
@@ -146,6 +152,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
               id: true,
               slug: true,
               name: true,
+              image: true,
             },
           });
           dbUser.merchants = [newM];
@@ -162,10 +169,12 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
           merchantId = dbUser.merchants[0].id;
           merchantSlug = dbUser.merchants[0].slug;
           merchantName = dbUser.merchants[0].name;
+          merchantImage = dbUser.merchants[0].image ?? undefined;
         }
       }
-    } catch {
+    } catch (dbErr) {
       // Prisma offline / fallback aman ke metadata Supabase
+      console.warn("getCurrentUser: gagal membaca profil dari database:", dbErr);
     }
 
     return {
@@ -177,6 +186,7 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       merchantId,
       merchantSlug,
       merchantName,
+      merchantImage,
     };
   } catch {
     return null;

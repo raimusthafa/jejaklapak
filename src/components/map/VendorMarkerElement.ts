@@ -1,4 +1,5 @@
 import { Merchant } from "@/types/merchant";
+import { LOGO_ICON_SRC } from "@/lib/merchant-image";
 
 export function createVendorMarkerElement(
   merchant: Merchant,
@@ -57,11 +58,17 @@ export function createVendorMarkerElement(
       : "border-[#994100] bg-white"
     : "border-slate-400 bg-white";
 
-  pin.className = `relative flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg leading-none transition-all shadow-md ${borderColor}`;
-  const emojiSpan = document.createElement("span");
-  emojiSpan.className = "select-none leading-none";
-  emojiSpan.textContent = merchant.iconEmoji || "🍲";
-  pin.appendChild(emojiSpan);
+  pin.className = `relative flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all shadow-md ${borderColor}`;
+
+  // Penanda di peta selalu memakai logo JejakLapak; nama dagangan tampil di label.
+  const logo = document.createElement("img");
+  logo.src = LOGO_ICON_SRC;
+  logo.alt = "";
+  logo.draggable = false;
+  logo.className = `h-6 w-6 object-contain pointer-events-none ${
+    isLive || isPaused ? "" : "grayscale opacity-70"
+  }`;
+  pin.appendChild(logo);
 
   // 4. Live Pulse Dot Badge
   const dot = document.createElement("span");

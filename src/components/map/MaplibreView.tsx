@@ -279,13 +279,9 @@ export default function MaplibreView({
         userEl.style.zIndex = "5";
         userEl.style.pointerEvents = "none";
         userEl.innerHTML = `
-          <div class="relative flex items-center justify-center">
-            <span class="absolute h-10 w-10 rounded-full bg-[#006781]/30 animate-ping"></span>
-            <div class="relative h-6 w-6 rounded-full bg-[#006194] border-2 border-white shadow-md flex items-center justify-center text-white" title="Lokasi Saya">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-3.5 w-3.5 text-white">
-                <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v2h20v-2c0-3.33-6.67-5-10-5z"/>
-              </svg>
-            </div>
+          <span class="absolute h-8 w-8 rounded-full bg-[#006781]/40 animate-ping"></span>
+          <div class="h-6 w-6 rounded-full bg-[#006194] border-2 border-white shadow-md flex items-center justify-center">
+            <span class="h-2 w-2 rounded-full bg-white"></span>
           </div>
         `;
         userMarkerRef.current = new maplibregl.Marker({ element: userEl })

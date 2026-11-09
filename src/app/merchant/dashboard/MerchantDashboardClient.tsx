@@ -43,8 +43,7 @@ export default function MerchantDashboardClient({
     tagline: "",
     description: "",
     category: "Makanan Berat",
-    iconEmoji: "🍲",
-    image: "/images/merchants/default.jpg",
+    image: "",
     phone: user?.phone || "",
     district: "Kota Bandung",
     city: "Bandung",
@@ -322,7 +321,7 @@ export default function MerchantDashboardClient({
         user={user}
         merchantName={merchant.name}
         merchantSlug={merchant.slug}
-        iconEmoji={merchant.iconEmoji}
+        photoUrl={merchant.image}
         sellingStatus={status}
         trackerCode={codeTracker}
       />

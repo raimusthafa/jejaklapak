@@ -118,7 +118,6 @@ export function VendorDetailContent({
 
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xl">{merchant.iconEmoji || "🍲"}</span>
               <h2 className="font-bold text-base sm:text-lg text-slate-900 tracking-tight leading-snug">
                 {merchant.name}
               </h2>
@@ -293,4 +292,3 @@ export function VendorDetailContent({
     </div>
   );
 }
-

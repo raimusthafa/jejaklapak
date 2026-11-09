@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { SellingStatus } from "@/types/merchant";
 import { AuthUser } from "@/server/auth";
+import { MerchantAvatar } from "@/components/common/MerchantAvatar";
 
 interface MerchantSidebarProps {
   isOpen: boolean;
@@ -28,7 +29,8 @@ interface MerchantSidebarProps {
   user?: AuthUser;
   merchantName?: string;
   merchantSlug?: string;
-  iconEmoji?: string;
+  /** Foto gerobak. Jika tidak diisi, dipakai foto dari akun yang login. */
+  photoUrl?: string | null;
   sellingStatus?: SellingStatus;
   trackerCode?: string;
 }
@@ -39,9 +41,9 @@ export function MerchantSidebar({
   user,
   merchantName = "Lapak Pedagang",
   merchantSlug,
-  iconEmoji = "🍲",
-  sellingStatus = "ENDED",
-  trackerCode,
+  photoUrl,
+  sellingStatus = "ACTIVE",
+  trackerCode = "BDG-0100",
 }: MerchantSidebarProps) {
   const resolvedTrackerCode =
     trackerCode ||
@@ -186,9 +188,11 @@ export function MerchantSidebar({
           {/* 2. Mini Lapak Card */}
           <div className="p-4 mx-3 my-3 rounded-2xl bg-[#f4f8fb] border border-slate-200/70 space-y-2">
             <div className="flex items-center gap-2.5">
-              <span className="text-2xl p-1 bg-white rounded-xl shadow-xs border border-slate-100">
-                {iconEmoji}
-              </span>
+              <MerchantAvatar
+                image={photoUrl !== undefined ? photoUrl : user?.merchantImage}
+                name={merchantName}
+                className="h-11 w-11 rounded-xl bg-white shadow-xs"
+              />
               <div className="min-w-0 flex-1">
                 <h2 className="text-xs font-bold text-slate-900 truncate">{merchantName}</h2>
                 <p className="text-[11px] text-slate-500 font-medium">#{resolvedTrackerCode}</p>
@@ -324,4 +328,3 @@ export function MerchantSidebar({
     </>
   );
 }
-

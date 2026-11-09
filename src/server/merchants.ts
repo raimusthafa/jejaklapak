@@ -12,16 +12,6 @@ import {
 import { LngLat } from "@/types/location";
 import { MerchantProfileInput, UpdateScheduleInput, MenuItemInput } from "@/schemas/merchant";
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  "Makanan Berat": "🍲",
-  "Camilan": "🍢",
-  "Camilan & Gorengan": "🍢",
-  "Minuman Segar": "🍧",
-  "Kue & Roti": "🧇",
-  "Kopi & Teh": "☕",
-  "Jajanan Tradisional": "🥟",
-};
-
 /**
  * Check whether database is live and reachable.
  */
@@ -60,6 +50,55 @@ async function resolveMerchantId(idOrSlug: string): Promise<string> {
   } catch {
     return idOrSlug;
   }
+}
+
+/**
+ * Menentukan lapak mana yang boleh diubah oleh user.
+ * - ADMIN: boleh menunjuk lapak mana pun (memakai id yang diminta).
+ * - MERCHANT: hanya lapak miliknya. Dicari langsung di database lewat ownerId
+ *   (tidak bergantung pada session), dan id dari client hanya diterima jika memang miliknya.
+ * Status verifikasi (PENDING/VERIFIED) tidak memengaruhi hak mengubah foto.
+ */
+export async function resolveOwnedMerchantId(
+  user: { id: string; role: string; merchantId?: string | null; merchantSlug?: string | null },
+  requestedId?: string
+): Promise<string | null> {
+  if (user.role === "ADMIN") {
+    return requestedId ? await resolveMerchantId(requestedId) : null;
+  }
+
+  try {
+    const isDbLive = await isDatabaseAvailable();
+    if (isDbLive) {
+      const owned = await prisma.merchant.findMany({
+        where: { ownerId: user.id },
+        select: { id: true },
+        orderBy: { createdAt: "asc" },
+      });
+      if (requestedId && owned.some((m) => m.id === requestedId)) return requestedId;
+      if (owned.length > 0) return owned[0].id;
+      if (user.merchantId) {
+        const byId = await prisma.merchant.findUnique({
+          where: { id: user.merchantId },
+          select: { id: true },
+        });
+        if (byId) return byId.id;
+      }
+      if (user.merchantSlug) {
+        const bySlug = await prisma.merchant.findUnique({
+          where: { slug: user.merchantSlug },
+          select: { id: true },
+        });
+        if (bySlug) return bySlug.id;
+      }
+      return null;
+    }
+  } catch (err) {
+    console.warn("resolveOwnedMerchantId gagal:", err);
+  }
+
+  // Mode demo tanpa database
+  return user.merchantId ?? null;
 }
 
 /**
@@ -118,8 +157,7 @@ export async function getPublicMerchants(): Promise<Merchant[]> {
         tagline: m.description ?? mockMatch?.tagline ?? "",
         description: m.description ?? mockMatch?.description ?? "",
         category: (m.category as MerchantCategory) || "Makanan Berat",
-        iconEmoji: mockMatch?.iconEmoji || CATEGORY_EMOJI[m.category] || "🍲",
-        image: m.image ?? mockMatch?.image ?? "/images/merchants/default.jpg",
+        image: m.image ?? mockMatch?.image ?? "",
         phone: m.phone,
         district: m.district,
         city: m.city,
@@ -252,8 +290,7 @@ export async function getMerchantForUser(user: {
           tagline: dbMerchant.description ?? mockMatch?.tagline ?? "",
           description: dbMerchant.description ?? mockMatch?.description ?? "",
           category: (dbMerchant.category as MerchantCategory) || "Makanan Berat",
-          iconEmoji: mockMatch?.iconEmoji || CATEGORY_EMOJI[dbMerchant.category] || "🍲",
-          image: dbMerchant.image ?? mockMatch?.image ?? "/images/merchants/default.jpg",
+          image: dbMerchant.image ?? mockMatch?.image ?? "",
           phone: dbMerchant.phone,
           district: dbMerchant.district,
           city: dbMerchant.city,
@@ -405,6 +442,37 @@ export async function updateMerchantProfile(merchantId: string, data: MerchantPr
     description: data.description ?? "",
   });
   return { id: merchantId, ...data };
+}
+
+/**
+ * Simpan (atau hapus, jika null) URL foto gerobak merchant.
+ * Mengembalikan URL foto sebelumnya agar file lamanya bisa dibersihkan dari storage.
+ */
+export async function setMerchantImage(
+  merchantId: string,
+  imageUrl: string | null
+): Promise<{ id: string; previousImage: string | null }> {
+  const isDbLive = await isDatabaseAvailable();
+  if (isDbLive) {
+    const targetId = await resolveMerchantId(merchantId);
+    const existing = await prisma.merchant.findUnique({
+      where: { id: targetId },
+      select: { image: true },
+    });
+    if (!existing) {
+      throw new Error("Lapak tidak ditemukan.");
+    }
+    await prisma.merchant.update({
+      where: { id: targetId },
+      data: { image: imageUrl },
+    });
+    return { id: targetId, previousImage: existing.image };
+  }
+
+  // Mode demo tanpa database: simpan di memori saja.
+  const previous = merchantService.getById(merchantId)?.image ?? null;
+  merchantService.updateProfile(merchantId, { image: imageUrl ?? "" });
+  return { id: merchantId, previousImage: previous };
 }
 
 /**

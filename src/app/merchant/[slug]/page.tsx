@@ -12,6 +12,7 @@ import {
   Utensils,
   CheckCircle2,
 } from "lucide-react";
+import { MerchantAvatar } from "@/components/common/MerchantAvatar";
 
 export function generateStaticParams() {
   return merchantService.getAll().map((m) => ({
@@ -58,9 +59,7 @@ export default async function MerchantDetailPage({
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-4xl border border-emerald-200 shadow-inner">
-                <span>{merchant.iconEmoji || "🍲"}</span>
-              </div>
+              <MerchantAvatar image={merchant.image} name={merchant.name} className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl shadow-inner" />
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">
@@ -207,4 +206,3 @@ export default async function MerchantDetailPage({
     </div>
   );
 }
-
